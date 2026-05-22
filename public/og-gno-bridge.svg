@@ -1,25 +1,24 @@
 <svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1200" height="630" fill="#F7FBF8"/>
-  <rect x="72" y="72" width="1056" height="486" rx="48" fill="#FFFFFF"/>
-  <rect x="72" y="72" width="1056" height="486" rx="48" stroke="#D8E8DF" stroke-width="2"/>
-  <circle cx="180" cy="180" r="72" fill="#E8F4EE"/>
-  <image href="./logo_196.png" x="110" y="110" width="140" height="140" preserveAspectRatio="xMidYMid meet"/>
+  <rect width="1200" height="630" fill="#F8FBF9"/>
+  <rect x="78" y="76" width="1044" height="478" rx="36" fill="#FFFFFF"/>
+  <rect x="78" y="76" width="1044" height="478" rx="36" stroke="#D8E8DF" stroke-width="2"/>
+  <rect x="110" y="438" width="328" height="56" rx="28" fill="#EAF4EF"/>
+  <rect x="462" y="438" width="256" height="56" rx="28" fill="#EAF4EF"/>
+  <image href="./logo_196.png" x="114" y="114" width="140" height="140" preserveAspectRatio="xMidYMid meet"/>
   <text x="300" y="188" fill="#123C2F" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="800" letter-spacing="0">
     Gno.land Bridge
   </text>
   <text x="300" y="254" fill="#226C57" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="600" letter-spacing="0">
     Permissionless, non-custodial bridge
   </text>
-  <text x="110" y="370" fill="#243B34" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="500" letter-spacing="0">
+  <line x1="110" y1="320" x2="1090" y2="320" stroke="#D8E8DF" stroke-width="2"/>
+  <text x="110" y="382" fill="#243B34" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="500" letter-spacing="0">
     Move tokens in and out of gno.land via Union protocol.
   </text>
-  <g opacity="0.9">
-    <rect x="110" y="438" width="278" height="56" rx="28" fill="#226C57"/>
-    <text x="146" y="476" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="0">
-      bridge.onbloc.xyz
-    </text>
-  </g>
-  <path d="M1015 398C1070 424 1074 484 1021 512C968 540 884 526 831 488C778 450 778 402 831 380C884 358 960 372 1015 398Z" fill="#E8F4EE"/>
-  <path d="M981 418C1016 435 1019 473 985 491C951 509 897 500 863 476C829 452 829 421 863 407C897 393 946 402 981 418Z" fill="#226C57"/>
-  <path d="M939 443C959 453 961 475 941 485C921 496 890 490 870 476C850 462 850 444 870 436C890 428 919 434 939 443Z" fill="#62C17E"/>
+  <text x="146" y="476" fill="#226C57" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800" letter-spacing="0">
+    bridge.onbloc.xyz
+  </text>
+  <text x="498" y="476" fill="#226C57" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="800" letter-spacing="0">
+    Union protocol
+  </text>
 </svg>
