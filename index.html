@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#175D38" />
+    <meta
+      name="description"
+      content="Gno.land Bridge - permissionless, non-custodial bridge for moving tokens in and out of gno.land via Union protocol."
+    />
+    <link rel="apple-touch-icon" href="/logo_196.png" />
+    <title>Gno.land Bridge</title>
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem('gnobridge.theme')
+          if (t !== 'light' && t !== 'dark') t = 'light'
+          document.documentElement.dataset.theme = t
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>

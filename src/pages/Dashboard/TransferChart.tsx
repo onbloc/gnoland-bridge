@@ -1,0 +1,218 @@
+import { ReactElement, useMemo } from 'react'
+
+import type { ChartPoint } from 'hooks/useDashboard'
+
+const SERIES = [
+  {
+    key: 'atomoneToEth',
+    color: 'oklch(0.72 0.13 158)',
+    label: 'AtomOne → Ethereum',
+  },
+  {
+    key: 'ethToAtomone',
+    color: 'oklch(0.58 0.14 158)',
+    label: 'Ethereum → AtomOne',
+  },
+  {
+    key: 'atomoneToBase',
+    color: 'oklch(0.44 0.10 158)',
+    label: 'AtomOne → Base',
+  },
+  {
+    key: 'baseToAtomone',
+    color: 'oklch(0.86 0.07 158)',
+    label: 'Base → AtomOne',
+  },
+] as const
+
+const formatDate = (dateStr: string): string => {
+  const d = new Date(dateStr)
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
+const TransferChart = ({
+  data,
+  loading = false,
+}: {
+  data: ChartPoint[]
+  loading?: boolean
+}): ReactElement => {
+  const maxValue = useMemo(
+    () => (data.length ? Math.max(...data.map((d) => d.total), 1) : 1),
+    [data]
+  )
+
+  const barWidth = useMemo(
+    () => (data.length ? Math.max(100 / data.length - 1, 2) : 0),
+    [data]
+  )
+
+  const labelIndices = useMemo(() => {
+    const len = data.length
+    if (len <= 6) return data.map((_, i) => i)
+    const step = Math.floor(len / 5)
+    const indices: number[] = []
+    for (let i = 0; i < len; i += step) indices.push(i)
+    if (indices[indices.length - 1] !== len - 1) indices.push(len - 1)
+    return indices
+  }, [data])
+
+  return (
+    <div className="card">
+      <div className="card__header">
+        <div>
+          <div className="card__title">Daily Transfer Volume</div>
+          <div className="card__sub">Stacked by route</div>
+        </div>
+      </div>
+      <div style={{ padding: 'var(--space-6)' }}>
+        {loading ? (
+          <div
+            style={{
+              height: 200,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-tertiary)',
+              fontSize: 'var(--fs-100)',
+            }}
+          >
+            Loading chart data…
+          </div>
+        ) : !data.length ? (
+          <div
+            style={{
+              height: 200,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--text-tertiary)',
+              fontSize: 'var(--fs-100)',
+            }}
+          >
+            No transfer data available
+          </div>
+        ) : (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--space-3)',
+            }}
+          >
+            <div style={{ position: 'relative', width: '100%', height: 200 }}>
+              <svg
+                width="100%"
+                height="100%"
+                viewBox="0 0 1000 200"
+                preserveAspectRatio="none"
+                style={{ overflow: 'visible', display: 'block' }}
+              >
+                {[0, 50, 100, 150, 200].map((y) => (
+                  <line
+                    key={y}
+                    x1="0"
+                    y1={y}
+                    x2="1000"
+                    y2={y}
+                    stroke="var(--border-1)"
+                    strokeWidth="1"
+                  />
+                ))}
+                {data.map((point, i) => {
+                  const x = (i / data.length) * 1000 + 2
+                  const w = barWidth * 10
+                  let stackY = 200
+                  return (
+                    <g key={point.date}>
+                      {SERIES.map(({ key, color, label }) => {
+                        const val = point[key]
+                        const h = Math.max((val / maxValue) * 200, 0)
+                        stackY -= h
+                        return (
+                          <rect
+                            key={key}
+                            x={x}
+                            y={stackY}
+                            width={w}
+                            height={h}
+                            fill={color}
+                            opacity={0.85}
+                          >
+                            <title>
+                              {formatDate(point.date)}: {label} {val}
+                            </title>
+                          </rect>
+                        )
+                      })}
+                    </g>
+                  )
+                })}
+              </svg>
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                padding: '0 4px',
+                fontSize: 'var(--fs-50)',
+                color: 'var(--text-tertiary)',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.02em',
+              }}
+            >
+              {labelIndices.map((idx) => (
+                <span key={idx}>{formatDate(data[idx].date)}</span>
+              ))}
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: 'var(--space-5)',
+                marginTop: 'var(--space-2)',
+                fontSize: 'var(--fs-50)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              {SERIES.map(({ key, color, label }) => (
+                <span
+                  key={key}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 14,
+                      height: 8,
+                      borderRadius: 1,
+                      background: color,
+                      display: 'inline-block',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.06em',
+                    }}
+                  >
+                    {label}
+                  </span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default TransferChart

@@ -1,0 +1,247 @@
+import { ReactElement, useEffect, useState } from 'react'
+import { useRecoilState, useRecoilValue } from 'recoil'
+
+import { UTIL, NETWORK } from 'consts'
+
+import SendStore from 'store/SendStore'
+import PacketTracker from 'components/PacketTracker'
+
+import useAsset from 'hooks/useAsset'
+
+import SendProcessStore from 'store/SendProcessStore'
+import AuthStore from 'store/AuthStore'
+import { isGnoChain } from 'types/network'
+
+const Finish = (): ReactElement => {
+  const { formatBalance } = useAsset()
+  const gnoWallet = useRecoilValue(AuthStore.gnoWallet)
+  const evmWallet = useRecoilValue(AuthStore.evmWallet)
+  const fromBlockChain = useRecoilValue(SendStore.fromBlockChain)
+  const toBlockChain = useRecoilValue(SendStore.toBlockChain)
+
+  const walletType = isGnoChain(fromBlockChain)
+    ? gnoWallet?.walletType || 'Adena'
+    : evmWallet?.walletType || 'MetaMask'
+
+  const asset = useRecoilValue(SendStore.asset)
+  const [toAddress, setToAddress] = useRecoilState(SendStore.toAddress)
+  const [amount, setAmount] = useRecoilState(SendStore.amount)
+
+  const [requestTxResult, setRequestTxResult] = useRecoilState(
+    SendProcessStore.requestTxResult
+  )
+  const [waitForReceiptError, setWaitForReceiptError] = useRecoilState(
+    SendProcessStore.waitForReceiptError
+  )
+
+  const [displayAmount] = useState(amount)
+  const [displayToAddress] = useState(toAddress)
+  const [displayRequestTxResult] = useState(requestTxResult)
+  const [displayErrorMessage] = useState(waitForReceiptError)
+
+  useEffect(() => {
+    setToAddress('')
+    setAmount('')
+    setRequestTxResult({ success: false })
+    setWaitForReceiptError('')
+  }, [])
+
+  const failed = !!displayErrorMessage
+
+  // RPC that gnoscan will use to resolve the source tx. Kept separate
+  // from VITE_GNO_RPC_URL because the in-app value can be a same-origin
+  // proxy path that gnoscan can't dereference. Defaults to the current
+  // devnet endpoint; override via VITE_GNO_EXPLORER_RPC_URL once a
+  // public HTTPS endpoint is available.
+  const gnoExplorerRpc =
+    import.meta.env.VITE_GNO_EXPLORER_RPC_URL || 'http://23.20.153.250:26657/'
+
+  const gnoScanUrl = (txHash: string): string => {
+    const params = new URLSearchParams({
+      txhash: txHash,
+      type: 'custom',
+      rpcUrl: gnoExplorerRpc,
+    })
+    return `https://gnoscan-git-feature-gns-372-onbloc.vercel.app/transactions/details?${params.toString()}`
+  }
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--space-5)',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 'var(--space-2)',
+          padding: 'var(--space-6) 0',
+        }}
+      >
+        {failed ? (
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              border: '1.5px solid oklch(0.62 0.16 30)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 'var(--space-2)',
+            }}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="oklch(0.62 0.16 30)"
+              strokeWidth="2"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </div>
+        ) : (
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: '50%',
+              border: '1.5px solid var(--bg-brand)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 'var(--space-2)',
+            }}
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--bg-brand)"
+              strokeWidth="2"
+            >
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          </div>
+        )}
+        <h2
+          style={{
+            fontSize: 'var(--fs-600)',
+            fontWeight: 500,
+            color: 'var(--text-primary)',
+            letterSpacing: '-0.025em',
+            margin: 0,
+          }}
+        >
+          {failed ? 'Transfer failed' : 'Transfer complete'}
+        </h2>
+        {failed ? (
+          <p
+            style={{
+              color: 'oklch(0.62 0.16 30)',
+              maxWidth: 380,
+              margin: 0,
+              fontSize: 'var(--fs-100)',
+              textAlign: 'center',
+              whiteSpace: 'pre-wrap',
+            }}
+          >
+            {displayErrorMessage}
+          </p>
+        ) : (
+          <p
+            style={{
+              color: 'var(--text-secondary)',
+              margin: 0,
+              fontSize: 'var(--fs-100)',
+              textAlign: 'center',
+            }}
+          >
+            {formatBalance(displayAmount)} {asset?.symbol} delivered via{' '}
+            {walletType} to{' '}
+            <span className="mono">
+              {displayToAddress
+                ? UTIL.truncate(displayToAddress, [10, 6])
+                : '-'}
+            </span>
+          </p>
+        )}
+      </div>
+
+      <div className="summary" style={{ border: 0, padding: 0 }}>
+        <div className="summary__row">
+          <span className="summary__k">Asset</span>
+          <span className="summary__v">{asset?.symbol || '-'}</span>
+        </div>
+        <div className="summary__row">
+          <span className="summary__k">From</span>
+          <span className="summary__v">
+            {NETWORK.blockChainName[fromBlockChain]}
+          </span>
+        </div>
+        <div className="summary__row">
+          <span className="summary__k">To</span>
+          <span className="summary__v">
+            {NETWORK.blockChainName[toBlockChain]}
+          </span>
+        </div>
+        <div className="summary__row">
+          <span className="summary__k">Amount</span>
+          <span className="summary__v">
+            {formatBalance(displayAmount)} {asset?.symbol || ''}
+          </span>
+        </div>
+        <div className="summary__row">
+          <span className="summary__k">Recipient</span>
+          <span className="summary__v" style={{ fontSize: 'var(--fs-50)' }}>
+            {displayToAddress ? UTIL.truncate(displayToAddress, [10, 8]) : '-'}
+          </span>
+        </div>
+        {displayRequestTxResult?.success &&
+          displayRequestTxResult.packetHash && (
+            <div className="summary__row">
+              <span className="summary__k">Packet</span>
+              <a
+                className="summary__v text-link"
+                href={`https://app.union.build/explorer/transfers/${displayRequestTxResult.packetHash}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: 'var(--fs-50)' }}
+              >
+                {UTIL.truncate(displayRequestTxResult.packetHash, [10, 6])} ↗
+              </a>
+            </div>
+          )}
+        {displayRequestTxResult?.success &&
+          displayRequestTxResult.hash &&
+          isGnoChain(fromBlockChain) && (
+            <div className="summary__row">
+              <span className="summary__k">Source Tx</span>
+              <a
+                className="summary__v text-link"
+                href={gnoScanUrl(displayRequestTxResult.hash)}
+                target="_blank"
+                rel="noreferrer"
+                style={{ fontSize: 'var(--fs-50)' }}
+              >
+                {UTIL.truncate(displayRequestTxResult.hash, [10, 6])} ↗
+              </a>
+            </div>
+          )}
+      </div>
+
+      {displayRequestTxResult?.success && displayRequestTxResult.packetHash && (
+        <PacketTracker packetHash={displayRequestTxResult.packetHash} />
+      )}
+    </div>
+  )
+}
+
+export default Finish

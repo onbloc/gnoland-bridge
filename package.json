@@ -1,0 +1,115 @@
+{
+  "name": "gnoland-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.23.0",
+  "description": "Gno.land Bridge: bridge GNOT between Gno.land and EVM chains via Union protocol",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@adena-wallet/sdk": "^0.0.14",
+    "@bufbuild/protobuf": "2.2.3",
+    "@cosmjs/amino": "^0.32.4",
+    "@cosmjs/proto-signing": "^0.38.1",
+    "@cosmjs/stargate": "^0.38.1",
+    "@effect/experimental": "^0.60.0",
+    "@effect/platform": "^0.96.0",
+    "@safe-global/safe-apps-sdk": "^9.1.0",
+    "@unionlabs/sdk": "^2.0.0-beta.2",
+    "@unionlabs/sdk-cosmos": "^0.0.0-beta.0",
+    "@unionlabs/sdk-evm": "^0.0.4",
+    "axios": "^1.15.0",
+    "bech32": "^1.1.4",
+    "bignumber.js": "^9.0.1",
+    "cosmjs-types": "^0.11.0",
+    "dayjs": "^1.11.20",
+    "effect": "^3.21.0",
+    "react": "^18.3.1",
+    "react-click-away-listener": "^2.0.3",
+    "react-dom": "^18.3.1",
+    "react-modal": "^3.16.3",
+    "react-query": "^3.39.3",
+    "react-router-dom": "^6.30.3",
+    "react-use-clipboard": "^1.0.7",
+    "recoil": "^0.7.7",
+    "use-debounce": "^9.0.4",
+    "viem": "^2.47.11"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.11.8",
+    "@testing-library/react": "^11.2.2",
+    "@testing-library/user-event": "^12.6.0",
+    "@types/jest": "^26.0.19",
+    "@types/node": "^12.20.1",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@types/react-modal": "^3.12.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "autoprefixer": "^10.4.27",
+    "husky": "^4.3.8",
+    "lint-staged": "^10.5.4",
+    "postcss": "^8.5.9",
+    "prettier": "^2.2.1",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21",
+    "vite-plugin-node-polyfills": "^0.26.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint --fix src/**/*.{ts,tsx}",
+    "prettier": "prettier --write './src/**/*.ts'"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ],
+    "rules": {
+      "@typescript-eslint/explicit-function-return-type": "error",
+      "@typescript-eslint/no-unused-vars": "error",
+      "import/no-anonymous-default-export": "off",
+      "react-hooks/exhaustive-deps": "off"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "prettier --write"
+    ]
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@cosmjs/*"
+      ],
+      "allowAny": [
+        "@cosmjs/*",
+        "@effect/*",
+        "effect",
+        "vite"
+      ]
+    }
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "short_name": "Gno.land Bridge",
+  "name": "Gno.land Bridge",
+  "icons": [
+    {
+      "src": "logo_196.png",
+      "sizes": "any",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#175D38",
+  "background_color": "#ffffff"
+}
