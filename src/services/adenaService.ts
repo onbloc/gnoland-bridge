@@ -4,6 +4,8 @@ import {
   type AccountInfo,
 } from '@adena-wallet/sdk'
 
+import type { GnoNetwork } from 'consts/gnoNetworks'
+
 let sdkInstance: AdenaSDK | null = null
 
 const getSDK = (): AdenaSDK => {
@@ -69,6 +71,14 @@ const waitForAdena = (timeoutMs = 3000): Promise<void> =>
     }, 50)
   })
 
+const requireAdena = async (): Promise<void> => {
+  try {
+    await waitForAdena()
+  } catch {
+    throw new AdenaNotInstalledError()
+  }
+}
+
 // AdenaSDK doesn't expose `getNetwork`, so call the injected window.adena
 // API directly. Response shape:
 //   { status: 'success' | 'failure', data: { chainId, networkName, rpcUrl, ... } }
@@ -88,6 +98,78 @@ const readNetwork = async (): Promise<{
     // wallet may be locked or call may be unsupported; fall through
   }
   return { networkName: '', rpcUrl: '' }
+}
+
+const isSuccessResponse = (resp: any): boolean => {
+  const type = String(resp?.type ?? '')
+  return (
+    resp?.status === 'success' ||
+    type.includes('SUCCESS') ||
+    type.includes('ALREADY') ||
+    type === 'REDUNDANT_CHANGE_REQUEST'
+  )
+}
+
+const responseMessage = (resp: any, fallback: string): string =>
+  resp?.message || resp?.type || fallback
+
+const addNetwork = async (network: GnoNetwork): Promise<void> => {
+  await requireAdena()
+
+  const resp = await window.adena?.AddNetwork?.({
+    chainId: network.chainId,
+    chainName: network.chainName,
+    rpcUrl: network.rpcUrl,
+  })
+  if (!isSuccessResponse(resp)) {
+    throw new AdenaConnectionError(
+      responseMessage(resp, `Failed to add Adena network ${network.chainId}`)
+    )
+  }
+}
+
+const switchNetwork = async (chainId: string): Promise<'done' | 'unadded'> => {
+  await requireAdena()
+
+  const resp = await window.adena?.SwitchNetwork?.(chainId)
+  if (resp?.type === 'UNADDED_NETWORK') {
+    return 'unadded'
+  }
+  if (!isSuccessResponse(resp)) {
+    throw new AdenaConnectionError(
+      responseMessage(resp, `Failed to switch Adena network ${chainId}`)
+    )
+  }
+  return 'done'
+}
+
+const ensureNetwork = async (network: GnoNetwork): Promise<void> => {
+  await requireAdena()
+
+  try {
+    const account = await window.adena?.GetAccount?.()
+    if (
+      account?.status === 'success' &&
+      account.data?.chainId === network.chainId
+    ) {
+      return
+    }
+  } catch {
+    // If account lookup is not available yet, continue with SwitchNetwork.
+  }
+
+  const switched = await switchNetwork(network.chainId)
+  if (switched === 'done') {
+    return
+  }
+
+  await addNetwork(network)
+  const retry = await switchNetwork(network.chainId)
+  if (retry !== 'done') {
+    throw new AdenaConnectionError(
+      `Adena network ${network.chainId} was added but not selected`
+    )
+  }
 }
 
 const connect = async (): Promise<AdenaSession> => {
@@ -246,6 +328,9 @@ export default {
   checkInstalled,
   restore,
   establish,
+  addNetwork,
+  switchNetwork,
+  ensureNetwork,
   onNetworkChange,
   onAccountChange,
   ADENA_APP_URL,

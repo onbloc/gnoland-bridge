@@ -12,10 +12,10 @@ import SendFormButton from './SendFormButton'
 import BlockChainNetwork from './BlockChainNetwork'
 import FinishButton from './FinishButton'
 import SelectBridge from 'components/SelectBridge'
+import NetworkSelector from 'components/NetworkSelector'
 import AuthStore from 'store/AuthStore'
 import useAuth from 'hooks/useAuth'
 import SendStore from 'store/SendStore'
-import NetworkStore from 'store/NetworkStore'
 import { BlockChainType } from 'types/network'
 import { WarningInfo } from './SendForm/WarningInfo'
 
@@ -46,7 +46,6 @@ const BackButton = ({ onClick }: { onClick: () => void }): ReactElement => (
 const Send = (): ReactElement => {
   const [status, setStatus] = useRecoilState(SendProcessStore.sendProcessStatus)
   const isLoggedIn = useRecoilValue(AuthStore.isLoggedIn)
-  const adenaExt = useRecoilValue(NetworkStore.adenaExt)
   const { getLoginStorage } = useAuth()
   const [initPage, setInitPage] = useState(false)
   const [toBlockChain, setToBlockChain] = useRecoilState(SendStore.toBlockChain)
@@ -109,9 +108,7 @@ const Send = (): ReactElement => {
             <BackButton onClick={onClickBack} />
           )}
           {isInput ? (
-            <span className={`tag${adenaExt?.name ? ' tag--success' : ''}`}>
-              <span className="dot" /> {adenaExt?.name || 'Not connected'}
-            </span>
+            <NetworkSelector />
           ) : (
             <span className="section-title">{STEP_EYEBROW[status]}</span>
           )}

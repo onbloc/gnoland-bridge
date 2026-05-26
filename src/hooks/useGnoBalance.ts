@@ -76,7 +76,7 @@ const useGnoBalance = (): {
     // reports a stale rpcUrl (e.g. user edited Local network but hasn't
     // saved, or extension still holds an old localhost value). Wallet
     // rpcUrl is used only as a last resort for chains we don't ship.
-    const rpc = resolveGnoNetwork(chainId)?.rpc || gnoWallet?.rpcUrl
+    const rpc = resolveGnoNetwork(chainId)?.rpcUrl || gnoWallet?.rpcUrl
     if (!rpc) {
       console.warn(`Unsupported Gno.land chain: ${chainId ?? '(none)'}`)
       return zeroFill()
