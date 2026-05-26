@@ -111,6 +111,21 @@ const useApp = (): {
         console.warn('[metamask] accountsChanged apply failed', e)
       }
     })
+
+    // 5) MetaMask chainChanged: keep the selected chain in app state when
+    //    the user changes networks directly in the wallet.
+    metaMaskService.onChainChanged(async () => {
+      const evm = await metaMaskService.restore()
+      if (!evm?.address) {
+        disconnectEvm()
+        return
+      }
+      try {
+        await applyEvm(evm.address, evm.provider)
+      } catch (e) {
+        console.warn('[metamask] chainChanged apply failed', e)
+      }
+    })
   }
 
   return {
