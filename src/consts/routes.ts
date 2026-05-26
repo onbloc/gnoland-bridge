@@ -20,7 +20,9 @@ export type BridgeRoute = {
 // Wrapped ugnot created by the successful INITIALIZE ack at Gno block 939.
 // Packet hash:
 // 0x33b153dae8f93bc9f51b7608e90fb2112d214c75a85a93c160a1024009f63980
-const WRAPPED_UGNOT_SEPOLIA = '0x81E1e47D77c0596F01d6941d9FccD9e5cFBfE9da'
+const WRAPPED_UGNOT_SEPOLIA =
+  import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA ||
+  '0x7FEd1d819109fb7a095137bF867aBe61DB36c99c'
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
