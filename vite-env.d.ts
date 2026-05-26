@@ -8,6 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_GNO_TO_BASE_CHANNEL_ID?: string
   readonly VITE_UNION_TO_GNO_CHANNEL_ID?: string
   readonly VITE_GNO_EXPLORER_RPC_URL?: string
+  readonly VITE_WRAPPED_UGNOT_SEPOLIA?: string
 }
 
 interface ImportMeta {
