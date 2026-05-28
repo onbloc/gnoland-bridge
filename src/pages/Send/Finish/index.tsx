@@ -2,6 +2,7 @@ import { ReactElement, useEffect, useState } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 
 import { UTIL, NETWORK } from 'consts'
+import routes from 'consts/routes'
 
 import SendStore from 'store/SendStore'
 import PacketTracker from 'components/PacketTracker'
@@ -38,6 +39,8 @@ const Finish = (): ReactElement => {
   const [displayToAddress] = useState(toAddress)
   const [displayRequestTxResult] = useState(requestTxResult)
   const [displayErrorMessage] = useState(waitForReceiptError)
+  const [displayAsset] = useState(asset)
+  const [displayFromBlockChain] = useState(fromBlockChain)
 
   useEffect(() => {
     setToAddress('')
@@ -47,6 +50,56 @@ const Finish = (): ReactElement => {
   }, [])
 
   const failed = !!displayErrorMessage
+
+  const erc20Address = (() => {
+    if (!displayAsset) return undefined
+    const route = routes.find(
+      (r) => r.src === 'gnoland' && r.baseToken === displayAsset.denom
+    )
+    return route?.quoteToken
+  })()
+
+  const canAddToWallet =
+    !failed &&
+    isGnoChain(displayFromBlockChain) &&
+    !!erc20Address &&
+    typeof window !== 'undefined' &&
+    !!(window as { ethereum?: unknown }).ethereum
+
+  const handleAddToWallet = async (): Promise<void> => {
+    if (!canAddToWallet || !displayAsset || !erc20Address) return
+    try {
+      await (
+        window as unknown as {
+          ethereum: {
+            request: (args: {
+              method: string
+              params: {
+                type: string
+                options: {
+                  address: string
+                  symbol: string
+                  decimals: number
+                }
+              }
+            }) => Promise<void>
+          }
+        }
+      ).ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: erc20Address,
+            symbol: displayAsset.denom,
+            decimals: displayAsset.decimals,
+          },
+        },
+      })
+    } catch {
+      // user rejected or wallet unavailable, silent fail
+    }
+  }
 
   // RPC that gnoscan will use to resolve the source tx. Kept separate
   // from VITE_GNO_RPC_URL because the in-app value can be a same-origin
@@ -156,29 +209,54 @@ const Finish = (): ReactElement => {
             {displayErrorMessage}
           </p>
         ) : (
-          <p
-            style={{
-              color: 'var(--text-secondary)',
-              margin: 0,
-              fontSize: 'var(--fs-100)',
-              textAlign: 'center',
-            }}
-          >
-            {formatBalance(displayAmount)} {asset?.symbol} delivered via{' '}
-            {walletType} to{' '}
-            <span className="mono">
-              {displayToAddress
-                ? UTIL.truncate(displayToAddress, [10, 6])
-                : '-'}
-            </span>
-          </p>
+          <>
+            <p
+              style={{
+                color: 'var(--text-secondary)',
+                margin: 0,
+                fontSize: 'var(--fs-100)',
+                textAlign: 'center',
+              }}
+            >
+              {formatBalance(displayAmount)} {displayAsset?.symbol} delivered
+              via {walletType} to{' '}
+              <span className="mono">
+                {displayToAddress
+                  ? UTIL.truncate(displayToAddress, [10, 6])
+                  : '-'}
+              </span>
+            </p>
+            {canAddToWallet && (
+              <button
+                type="button"
+                className="add-to-wallet"
+                onClick={handleAddToWallet}
+                style={{ marginTop: 'var(--space-2)' }}
+              >
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M12 8v8M8 12h8" />
+                </svg>
+                Add {displayAsset?.symbol} to wallet
+              </button>
+            )}
+          </>
         )}
       </div>
 
       <div className="summary" style={{ border: 0, padding: 0 }}>
         <div className="summary__row">
           <span className="summary__k">Asset</span>
-          <span className="summary__v">{asset?.symbol || '-'}</span>
+          <span className="summary__v">{displayAsset?.symbol || '-'}</span>
         </div>
         <div className="summary__row">
           <span className="summary__k">From</span>
@@ -195,7 +273,7 @@ const Finish = (): ReactElement => {
         <div className="summary__row">
           <span className="summary__k">Amount</span>
           <span className="summary__v">
-            {formatBalance(displayAmount)} {asset?.symbol || ''}
+            {formatBalance(displayAmount)} {displayAsset?.symbol || ''}
           </span>
         </div>
         <div className="summary__row">
@@ -238,7 +316,14 @@ const Finish = (): ReactElement => {
       </div>
 
       {displayRequestTxResult?.success && displayRequestTxResult.packetHash && (
-        <PacketTracker packetHash={displayRequestTxResult.packetHash} />
+        <PacketTracker
+          packetHash={displayRequestTxResult.packetHash}
+          sourceTxUrl={
+            isGnoChain(displayFromBlockChain) && displayRequestTxResult.hash
+              ? gnoScanUrl(displayRequestTxResult.hash)
+              : undefined
+          }
+        />
       )}
     </div>
   )

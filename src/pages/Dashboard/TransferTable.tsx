@@ -2,7 +2,11 @@ import { ReactElement } from 'react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 
-import type { Transfer } from 'packages/union/dashboard-graphql'
+import {
+  getRelayerTransferAmount,
+  getRelayerTransferTokenSymbol,
+  type RelayerTransfer,
+} from 'packages/relayer-api'
 import ChainBadge from './ChainBadge'
 import StatusBadge from './StatusBadge'
 
@@ -14,15 +18,7 @@ const truncateAddr = (addr: string): string => {
   return `${addr.slice(0, 8)}…${addr.slice(-6)}`
 }
 
-const formatAmount = (amount: string, decimals: number): string => {
-  if (!amount) return '-'
-  const num = Number(amount) / Math.pow(10, decimals)
-  if (num === 0) return '0'
-  if (num < 0.001) return '< 0.001'
-  return num.toLocaleString(undefined, { maximumFractionDigits: 3 })
-}
-
-const formatTime = (timestamp: string | null): string => {
+const formatTime = (timestamp: string): string => {
   if (!timestamp) return '-'
   return dayjs(timestamp).fromNow()
 }
@@ -36,7 +32,7 @@ const TransferTable = ({
   onNext,
   onPrev,
 }: {
-  transfers: Transfer[]
+  transfers: RelayerTransfer[]
   loading?: boolean
   hasNextPage: boolean
   hasPrevPage: boolean
@@ -96,58 +92,42 @@ const TransferTable = ({
                 <th>Sender</th>
                 <th>Receiver</th>
                 <th style={{ textAlign: 'center' }}>Status</th>
-                <th></th>
               </tr>
             </thead>
             <tbody>
-              {transfers.map((t) => (
-                <tr key={t.packet_hash}>
+              {transfers.map((transfer) => (
+                <tr key={transfer.packet_hash}>
                   <td className="mono-cell" style={{ whiteSpace: 'nowrap' }}>
-                    {formatTime(t.transfer_send_timestamp)}
+                    {formatTime(transfer.created_at)}
                   </td>
                   <td style={{ fontWeight: 500, whiteSpace: 'nowrap' }}>
-                    {t.token_symbol || '-'}
+                    {getRelayerTransferTokenSymbol(transfer)}
                   </td>
                   <td className="num" style={{ whiteSpace: 'nowrap' }}>
-                    {formatAmount(t.base_amount, t.token_decimals)}
+                    {getRelayerTransferAmount(transfer)}
                   </td>
                   <td>
-                    <ChainBadge chainId={t.source_universal_chain_id} />
+                    <ChainBadge chainId={transfer.src_chain_id} />
                   </td>
                   <td>
-                    <ChainBadge chainId={t.destination_universal_chain_id} />
+                    <ChainBadge chainId={transfer.dst_chain_id} />
                   </td>
                   <td
                     className="mono-cell"
                     style={{ whiteSpace: 'nowrap' }}
-                    title={t.sender_display}
+                    title={transfer.from_address}
                   >
-                    {truncateAddr(t.sender_display)}
+                    {truncateAddr(transfer.from_address)}
                   </td>
                   <td
                     className="mono-cell"
                     style={{ whiteSpace: 'nowrap' }}
-                    title={t.receiver_display}
+                    title={transfer.to_address}
                   >
-                    {truncateAddr(t.receiver_display)}
+                    {truncateAddr(transfer.to_address)}
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    <StatusBadge success={t.success} />
-                  </td>
-                  <td>
-                    <a
-                      className="text-link mono"
-                      href={`https://app.union.build/explorer/transfers/${t.packet_hash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        fontSize: 'var(--fs-50)',
-                        letterSpacing: '0.04em',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      View ↗
-                    </a>
+                    <StatusBadge status={transfer.status} />
                   </td>
                 </tr>
               ))}

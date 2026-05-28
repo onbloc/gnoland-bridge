@@ -1,51 +1,53 @@
-import { Fragment, ReactElement, useEffect, useState, useRef } from 'react'
-import type { PacketDetails, PacketStatus } from 'packages/union/graphql'
+import { ReactElement, useEffect, useState, useRef } from 'react'
+import type { PacketDetails } from 'packages/union/graphql'
 
-const STEPS: { status: PacketStatus; label: string }[] = [
-  { status: 'PACKET_SEND', label: 'Sent' },
-  { status: 'PACKET_RECV', label: 'Received' },
-  { status: 'WRITE_ACK', label: 'Acknowledged' },
-  { status: 'PACKET_ACK', label: 'Completed' },
-]
-
-const STATUS_ORDER: Record<string, number> = {
+// Maps Union GraphQL status to the highest completed step index (0=Sent, 1=Relayed, 2=Received)
+const STATUS_TO_STEP: Record<string, number> = {
   PACKET_SEND: 0,
   PACKET_RECV: 1,
-  WRITE_ACK: 2,
-  PACKET_ACK: 3,
+  WRITE_ACK: 1,
+  PACKET_ACK: 2,
 }
 
-// Mirrors the success badge at the top of the Finish screen: a thin
-// brand-green outline circle that fills with a brand-green check when
-// the step has been reached.
-function StepDot({ reached }: { reached: boolean }): ReactElement {
-  return (
-    <div
-      className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-      style={{ border: '1.5px solid var(--bg-brand)' }}
-    >
-      {reached && (
-        <svg
-          width="14"
-          height="14"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--bg-brand)"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M20 6 9 17l-5-5" />
-        </svg>
-      )}
-    </div>
-  )
+const STEP_LABELS = ['Sent', 'Relayed', 'Received']
+
+function StepSubtext({
+  stepIndex,
+  completedStep,
+  sourceTxUrl,
+}: {
+  stepIndex: number
+  completedStep: number
+  sourceTxUrl?: string
+}): ReactElement {
+  if (stepIndex === 0 && completedStep >= 0 && sourceTxUrl) {
+    return (
+      <a
+        href={sourceTxUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="progress-step__sub progress-step__sub--brand"
+      >
+        View Tx ↗
+      </a>
+    )
+  }
+  if (stepIndex === 1 && completedStep >= 1) {
+    return (
+      <span className="progress-step__sub progress-step__sub--muted">
+        Complete
+      </span>
+    )
+  }
+  return <></>
 }
 
 export default function PacketTracker({
   packetHash,
+  sourceTxUrl,
 }: {
   packetHash: string
+  sourceTxUrl?: string
 }): ReactElement {
   const [packet, setPacket] = useState<PacketDetails | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -94,55 +96,81 @@ export default function PacketTracker({
 
   if (!packetHash) return <></>
 
-  const currentOrder = packet ? STATUS_ORDER[packet.status] ?? -1 : -1
+  const completedStep = packet ? STATUS_TO_STEP[packet.status] ?? -1 : -1
+
+  // Line fill: 0% when nothing done, 50% after step 1, 100% when all done
+  const lineFillPct =
+    completedStep < 1 ? '0%' : completedStep >= 2 ? '100%' : '50%'
 
   return (
-    <div className="mt-4">
-      <div className="text-gray-400 text-xs mb-3">Packet Tracking</div>
+    <div>
+      {error && (
+        <div
+          style={{
+            fontSize: 'var(--fs-50)',
+            color: 'var(--g-color-red-500)',
+            marginBottom: 'var(--space-2)',
+          }}
+        >
+          {error}
+        </div>
+      )}
 
-      {error && <div className="text-bridge-red text-xs mb-3">{error}</div>}
-
-      <div className="flex items-start mb-4 px-3">
-        {STEPS.map((step, i) => {
-          const stepOrder = STATUS_ORDER[step.status]
-          const reached = currentOrder >= stepOrder
-          // Bar between step i and i+1 lights up once the chain has
-          // progressed past step i (i.e. reached i+1 or beyond).
-          const barReached = currentOrder > stepOrder
-          return (
-            <Fragment key={step.status}>
-              <div className="flex flex-col items-center shrink-0">
-                <StepDot reached={reached} />
-                <span
-                  className={`text-[10px] mt-1 ${
-                    reached ? 'text-text-primary' : 'text-text-tertiary'
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div
-                  // h-7 matches the dot diameter so the line lands on the
-                  // dot's vertical centerline without manual margins.
-                  className="flex-1 h-7 flex items-center mx-2"
-                >
-                  <div
-                    className="w-full h-px"
-                    style={{
-                      backgroundColor: barReached
-                        ? 'var(--bg-brand)'
-                        : 'var(--border-2)',
-                    }}
-                  />
+      <div className="progress-track">
+        <div className="progress-track__line">
+          <div
+            className="progress-track__line-fill"
+            style={{ width: lineFillPct }}
+          />
+        </div>
+        <div className="progress-track__steps">
+          {STEP_LABELS.map((label, i) => {
+            const isDone = completedStep >= i
+            const isActive = !isDone && completedStep === i - 1
+            const cls =
+              'progress-step' +
+              (isDone ? ' is-done' : isActive ? ' is-active' : '')
+            return (
+              <div key={label} className={cls}>
+                <div className="progress-step__dot">
+                  {isDone && (
+                    <svg
+                      width="8"
+                      height="8"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  )}
+                  {isActive && <span className="progress-step__pulse" />}
                 </div>
-              )}
-            </Fragment>
-          )
-        })}
+                <span className="progress-step__label">{label}</span>
+                <StepSubtext
+                  stepIndex={i}
+                  completedStep={completedStep}
+                  sourceTxUrl={sourceTxUrl}
+                />
+              </div>
+            )
+          })}
+        </div>
       </div>
 
-      <div className="text-text-tertiary text-[10px] font-mono break-all">
+      <div
+        style={{
+          fontFamily: 'var(--font-mono)',
+          fontSize: 'var(--fs-50)',
+          color: 'var(--text-tertiary)',
+          letterSpacing: 0,
+          wordBreak: 'break-all',
+          marginTop: 'var(--space-2)',
+        }}
+      >
         {packetHash}
       </div>
     </div>

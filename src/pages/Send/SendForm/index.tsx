@@ -16,6 +16,7 @@ import SendStore from 'store/SendStore'
 
 import AssetList from './AssetList'
 import AutoFillButton from './AutoFillButton'
+import CopyTokenAddress from './CopyTokenAddress'
 
 const RefreshButton = (): ReactElement => {
   const isLoggedIn = useRecoilValue(AuthStore.isLoggedIn)
@@ -142,6 +143,7 @@ const SendForm = ({
           <RefreshButton />
         </label>
         <AssetList selectedAsset={asset} onChangeAmount={onChangeAmount} />
+        {asset && <CopyTokenAddress asset={asset} />}
       </div>
 
       {/* Amount */}

@@ -25,6 +25,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/gno-rpc/, ''),
       },
+      '/relayer-api': {
+        target: 'https://rpc.bridge.onbloc.xyz:8080',
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/relayer-api/, ''),
+      },
     },
   },
   resolve: {

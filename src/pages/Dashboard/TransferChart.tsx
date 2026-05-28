@@ -4,28 +4,19 @@ import type { ChartPoint } from 'hooks/useDashboard'
 
 const SERIES = [
   {
-    key: 'atomoneToEth',
+    key: 'gnoToEth',
     color: 'oklch(0.72 0.13 158)',
-    label: 'AtomOne → Ethereum',
+    label: 'Gno.land to Ethereum',
   },
   {
-    key: 'ethToAtomone',
+    key: 'ethToGno',
     color: 'oklch(0.58 0.14 158)',
-    label: 'Ethereum → AtomOne',
-  },
-  {
-    key: 'atomoneToBase',
-    color: 'oklch(0.44 0.10 158)',
-    label: 'AtomOne → Base',
-  },
-  {
-    key: 'baseToAtomone',
-    color: 'oklch(0.86 0.07 158)',
-    label: 'Base → AtomOne',
+    label: 'Ethereum to Gno.land',
   },
 ] as const
 
 const formatDate = (dateStr: string): string => {
+  if (dateStr === 'Unknown') return dateStr
   const d = new Date(dateStr)
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
@@ -50,7 +41,7 @@ const TransferChart = ({
   const labelIndices = useMemo(() => {
     const len = data.length
     if (len <= 6) return data.map((_, i) => i)
-    const step = Math.floor(len / 5)
+    const step = Math.max(Math.floor(len / 5), 1)
     const indices: number[] = []
     for (let i = 0; i < len; i += step) indices.push(i)
     if (indices[indices.length - 1] !== len - 1) indices.push(len - 1)
@@ -61,8 +52,8 @@ const TransferChart = ({
     <div className="card">
       <div className="card__header">
         <div>
-          <div className="card__title">Daily Transfer Volume</div>
-          <div className="card__sub">Stacked by route</div>
+          <div className="card__title">Loaded transfer volume</div>
+          <div className="card__sub">Current history page only</div>
         </div>
       </div>
       <div style={{ padding: 'var(--space-6)' }}>

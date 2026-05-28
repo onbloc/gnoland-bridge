@@ -12,18 +12,16 @@ const Dashboard = (): ReactElement => {
     setTokenFilter,
     routeFilter,
     setRouteFilter,
-    timeRange,
-    setTimeRange,
     filteredTransfers,
     transfersLoading,
     transfersError,
-    statsLoading,
-    statsError,
+    summaryLoading,
+    summaryError,
     chartData,
     totalTransfers,
     successRate,
-    medianLatency,
-    activeRoutes,
+    processingCount,
+    failedCount,
     currentPage,
     nextPage,
     prevPage,
@@ -60,21 +58,19 @@ const Dashboard = (): ReactElement => {
         <DashboardFilters
           tokenFilter={tokenFilter}
           routeFilter={routeFilter}
-          timeRange={timeRange}
           onTokenChange={setTokenFilter}
           onRouteChange={handleRouteChange}
-          onTimeRangeChange={setTimeRange}
         />
       </div>
 
-      {(transfersError || statsError) && (
+      {(transfersError || summaryError) && (
         <div
           className="alert alert--error"
           style={{ marginBottom: 'var(--space-6)' }}
         >
           <div>
             {transfersError?.message ??
-              statsError?.message ??
+              summaryError?.message ??
               'Failed to load data'}
           </div>
         </div>
@@ -84,31 +80,32 @@ const Dashboard = (): ReactElement => {
         <StatsCard
           label="Total transfers"
           value={totalTransfers}
-          subtitle={`Last ${timeRange} days`}
-          loading={statsLoading}
+          subtitle="All indexed transfers"
+          loading={summaryLoading}
         />
         <StatsCard
           label="Success rate"
           value={successRate != null ? `${successRate}%` : null}
-          subtitle={`Last ${transfersCount} transfers`}
+          subtitle={`Loaded ${transfersCount} transfers`}
           loading={transfersLoading}
           brand
         />
         <StatsCard
-          label="Median bridge time"
-          value={medianLatency != null ? `${medianLatency}s` : null}
-          subtitle="Median end-to-end"
+          label="Processing"
+          value={processingCount}
+          subtitle="Loaded page"
+          loading={transfersLoading}
         />
         <StatsCard
-          label="Active routes"
-          value={statsLoading ? null : activeRoutes.count || null}
-          subtitle={activeRoutes.chains || undefined}
-          loading={statsLoading}
+          label="Failed"
+          value={failedCount}
+          subtitle="Loaded page"
+          loading={transfersLoading}
         />
       </div>
 
       <div style={{ height: 'var(--space-8)' }} />
-      <TransferChart data={chartData} loading={statsLoading} />
+      <TransferChart data={chartData} loading={transfersLoading} />
 
       <div style={{ height: 'var(--space-8)' }} />
       <TransferTable

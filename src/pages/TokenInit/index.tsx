@@ -1,4 +1,4 @@
-import { ReactElement, useMemo, useState } from 'react'
+import { FormEvent, ReactElement, ReactNode, useMemo, useState } from 'react'
 import { useRecoilValue } from 'recoil'
 
 import PacketTracker from 'components/PacketTracker'
@@ -75,7 +75,7 @@ const TokenInit = (): ReactElement => {
 
   const adenaConnected = !!gnoWallet?.address
 
-  const onSubmit = async (e: React.FormEvent): Promise<void> => {
+  const onSubmit = async (e: FormEvent): Promise<void> => {
     e.preventDefault()
     setError('')
     setResult(null)
@@ -147,7 +147,7 @@ const TokenInit = (): ReactElement => {
 
   if (!GNO_DIRECT_ZKGM_ENABLED) {
     return (
-      <div style={{ maxWidth: 560, margin: '0 auto' }}>
+      <div className="token-init-page token-init-page--narrow">
         <div className="bridge-card">
           <div className="bridge-card__head">
             <div>
@@ -166,7 +166,18 @@ const TokenInit = (): ReactElement => {
   const success = result?.success === true
 
   return (
-    <div style={{ maxWidth: 640, margin: '0 auto' }}>
+    <div className="token-init-page">
+      <div className="page-head token-init-page__head">
+        <div className="page-eyebrow">
+          <span className="num">03</span>Operator
+        </div>
+        <h1 className="page-title">Token Init</h1>
+        <p className="page-sub">
+          Initialize wrapped ERC20 metadata for a Gno-side token before bridge
+          transfers.
+        </p>
+      </div>
+
       <div className="bridge-card">
         <div className="bridge-card__head">
           <div>
@@ -182,24 +193,12 @@ const TokenInit = (): ReactElement => {
           </span>
         </div>
 
-        <form
-          className="bridge-card__body"
-          onSubmit={onSubmit}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--space-4)',
-          }}
-        >
-          <section
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-3)',
-            }}
-          >
-            <Field label="From" value="gnoland" readOnly />
-            <Field label="To" value="ethereum (Sepolia)" readOnly />
+        <form className="bridge-card__body token-init-form" onSubmit={onSubmit}>
+          <FormSection title="Route and token">
+            <div className="token-init-grid token-init-grid--two">
+              <Field label="From" value="gnoland" readOnly />
+              <Field label="To" value="ethereum (Sepolia)" readOnly />
+            </div>
             <Field
               label="Base token (Gno denom)"
               value={baseToken}
@@ -217,13 +216,7 @@ const TokenInit = (): ReactElement => {
               onChange={setQuoteToken}
               mono
             />
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: 'var(--space-3)',
-              }}
-            >
+            <div className="token-init-grid token-init-grid--two">
               <Field
                 label="Source channel ID"
                 value={sourceChannel}
@@ -235,31 +228,10 @@ const TokenInit = (): ReactElement => {
                 onChange={setDestChannel}
               />
             </div>
-          </section>
+          </FormSection>
 
-          <section
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 'var(--space-3)',
-            }}
-          >
-            <h3
-              style={{
-                margin: 0,
-                fontSize: 'var(--fs-100)',
-                color: 'var(--text-secondary)',
-              }}
-            >
-              Wrapped ERC20 metadata
-            </h3>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: 'var(--space-3)',
-              }}
-            >
+          <FormSection title="Wrapped ERC20 metadata">
+            <div className="token-init-grid token-init-grid--three">
               <Field label="Name" value={tokenName} onChange={setTokenName} />
               <Field
                 label="Symbol"
@@ -295,57 +267,43 @@ const TokenInit = (): ReactElement => {
               mono
               placeholder="0x000…"
             />
-          </section>
+          </FormSection>
 
           <details
+            className="token-init-advanced"
             open={advancedOpen}
             onToggle={(e) =>
               setAdvancedOpen((e.target as HTMLDetailsElement).open)
             }
           >
-            <summary
-              style={{
-                cursor: 'pointer',
-                color: 'var(--text-secondary)',
-                fontSize: 'var(--fs-100)',
-                padding: 'var(--space-2) 0',
-              }}
-            >
-              Advanced: raw operand and metadata hex
-            </summary>
-            <Field
-              label="Override operand hex"
-              value={operandHexOverride}
-              onChange={setOperandHexOverride}
-              mono
-              placeholder="0x... (overrides the generated TokenOrderV2 operand)"
-              textarea
-            />
-            <Field
-              label="Override metadata hex"
-              value={overrideHex}
-              onChange={setOverrideHex}
-              mono
-              placeholder="0x… (overrides the encoded TokenMetadata)"
-              textarea
-            />
+            <summary>Advanced: raw operand and metadata hex</summary>
+            <div className="token-init-advanced__body">
+              <Field
+                label="Override operand hex"
+                value={operandHexOverride}
+                onChange={setOperandHexOverride}
+                mono
+                placeholder="0x... (overrides the generated TokenOrderV2 operand)"
+                textarea
+              />
+              <Field
+                label="Override metadata hex"
+                value={overrideHex}
+                onChange={setOverrideHex}
+                mono
+                placeholder="0x… (overrides the encoded TokenMetadata)"
+                textarea
+              />
+            </div>
           </details>
 
           {error && (
-            <div
-              style={{
-                color: 'oklch(0.62 0.16 30)',
-                fontSize: 'var(--fs-100)',
-                whiteSpace: 'pre-wrap',
-              }}
-            >
-              {error}
-            </div>
+            <div className="alert alert--error token-init-error">{error}</div>
           )}
 
           <button
             type="submit"
-            className="btn btn--primary"
+            className="btn btn--brand btn--lg btn--block"
             disabled={loading || !adenaConnected}
           >
             {loading ? 'Submitting…' : 'Initialize Token'}
@@ -353,21 +311,15 @@ const TokenInit = (): ReactElement => {
         </form>
 
         {success && result && (
-          <div
-            className="bridge-card__body"
-            style={{ borderTop: '1px solid var(--border-subtle)' }}
-          >
-            <div className="summary" style={{ border: 0, padding: 0 }}>
+          <div className="bridge-card__body token-init-result">
+            <div className="summary">
               <div className="summary__row">
                 <span className="summary__k">Status</span>
                 <span className="summary__v">INITIALIZE submitted</span>
               </div>
               <div className="summary__row">
                 <span className="summary__k">Source Tx</span>
-                <span
-                  className="summary__v mono"
-                  style={{ fontSize: 'var(--fs-50)' }}
-                >
+                <span className="summary__v">
                   {result.hash ? UTIL.truncate(result.hash, [10, 6]) : '-'}
                 </span>
               </div>
@@ -379,7 +331,6 @@ const TokenInit = (): ReactElement => {
                     href={`https://app.union.build/explorer/transfers/${result.packetHash}`}
                     target="_blank"
                     rel="noreferrer"
-                    style={{ fontSize: 'var(--fs-50)' }}
                   >
                     {UTIL.truncate(result.packetHash, [10, 6])} ↗
                   </a>
@@ -387,7 +338,7 @@ const TokenInit = (): ReactElement => {
               )}
             </div>
             {result.packetHash && (
-              <div style={{ marginTop: 'var(--space-4)' }}>
+              <div className="token-init-tracker">
                 <PacketTracker packetHash={result.packetHash} />
               </div>
             )}
@@ -408,6 +359,19 @@ type FieldProps = {
   textarea?: boolean
 }
 
+const FormSection = ({
+  title,
+  children,
+}: {
+  title: string
+  children: ReactNode
+}): ReactElement => (
+  <section className="token-init-section">
+    <h3 className="token-init-section__title">{title}</h3>
+    {children}
+  </section>
+)
+
 const Field = ({
   label,
   value,
@@ -417,46 +381,31 @@ const Field = ({
   placeholder,
   textarea,
 }: FieldProps): ReactElement => {
-  const inputStyle: React.CSSProperties = {
-    width: '100%',
-    padding: 'var(--space-2) var(--space-3)',
-    borderRadius: 'var(--radius-2)',
-    border: '1px solid var(--border-subtle)',
-    background: 'var(--bg-surface)',
-    color: 'var(--text-primary)',
-    fontSize: 'var(--fs-100)',
-    fontFamily: mono ? 'var(--font-mono, monospace)' : 'inherit',
-  }
+  const inputClassName =
+    'input' +
+    (mono ? ' input--mono' : '') +
+    (textarea ? ' input--textarea' : '')
+
   return (
-    <label
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 'var(--space-1)',
-      }}
-    >
-      <span
-        style={{ fontSize: 'var(--fs-50)', color: 'var(--text-secondary)' }}
-      >
-        {label}
-      </span>
+    <label className="field">
+      <span className="field__label">{label}</span>
       {textarea ? (
         <textarea
+          className={inputClassName}
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
           readOnly={readOnly || !onChange}
           placeholder={placeholder}
           rows={3}
-          style={inputStyle}
         />
       ) : (
         <input
+          className={inputClassName}
           type="text"
           value={value}
           onChange={(e) => onChange?.(e.target.value)}
           readOnly={readOnly || !onChange}
           placeholder={placeholder}
-          style={inputStyle}
         />
       )}
     </label>
