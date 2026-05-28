@@ -1,58 +1,48 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useQuery } from 'react-query'
 
 import {
-  CHAIN_IDS,
-  CHAIN_DISPLAY,
-  fetchAtomOneTransfers,
-  fetchAtomOneTransferStats,
-  fetchLatencyStats,
-  type Transfer,
-  type TransferStats,
-} from 'packages/union/dashboard-graphql'
+  fetchRelayerHistory,
+  fetchRelayerSummary,
+  getRelayerRouteKey,
+  getRelayerTransferTokenSymbol,
+  type RelayerTransfer,
+} from 'packages/relayer-api'
 
-export type TokenFilter = 'all' | 'ATONE' | 'PHOTON'
-export type RouteFilter = 'all' | 'atomone-ethereum' | 'atomone-base'
-export type TimeRange = 7 | 30 | 90
+export type TokenFilter = 'all' | 'GNOT' | 'WGNOT'
+export type RouteFilter = 'all' | 'gno-ethereum' | 'ethereum-gno'
 
 export interface ChartPoint {
   date: string
   total: number
-  atomoneToEth: number
-  ethToAtomone: number
-  atomoneToBase: number
-  baseToAtomone: number
+  gnoToEth: number
+  ethToGno: number
 }
 
-function aggregateChartData(stats: TransferStats[]): ChartPoint[] {
+const PAGE_SIZE = 20
+
+const formatDateKey = (timestamp: string): string =>
+  timestamp ? timestamp.slice(0, 10) : 'Unknown'
+
+function aggregateChartData(transfers: RelayerTransfer[]): ChartPoint[] {
   const byDate = new Map<string, ChartPoint>()
 
-  for (const s of stats) {
-    const date = s.day_date
+  for (const transfer of transfers) {
+    const date = formatDateKey(transfer.created_at)
     if (!byDate.has(date)) {
       byDate.set(date, {
         date,
         total: 0,
-        atomoneToEth: 0,
-        ethToAtomone: 0,
-        atomoneToBase: 0,
-        baseToAtomone: 0,
+        gnoToEth: 0,
+        ethToGno: 0,
       })
     }
-    const point = byDate.get(date)!
-    const count = Number(s.total_transfers)
-    point.total += count
 
-    const src = s.source_universal_chain_id
-    const dest = s.destination_universal_chain_id
-    if (src === CHAIN_IDS.osmosis && dest === CHAIN_IDS.ethereum)
-      point.atomoneToEth += count
-    else if (src === CHAIN_IDS.ethereum && dest === CHAIN_IDS.osmosis)
-      point.ethToAtomone += count
-    else if (src === CHAIN_IDS.osmosis && dest === CHAIN_IDS.base)
-      point.atomoneToBase += count
-    else if (src === CHAIN_IDS.base && dest === CHAIN_IDS.osmosis)
-      point.baseToAtomone += count
+    const point = byDate.get(date)!
+    point.total += 1
+    const route = getRelayerRouteKey(transfer)
+    if (route === 'gno-ethereum') point.gnoToEth += 1
+    if (route === 'ethereum-gno') point.ethToGno += 1
   }
 
   return Array.from(byDate.values()).sort((a, b) =>
@@ -63,144 +53,96 @@ function aggregateChartData(stats: TransferStats[]): ChartPoint[] {
 export function useDashboard() {
   const [tokenFilter, setTokenFilter] = useState<TokenFilter>('all')
   const [routeFilter, setRouteFilter] = useState<RouteFilter>('all')
-  const [timeRange, setTimeRange] = useState<TimeRange>(30)
   const [currentPage, setCurrentPage] = useState(0)
-  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined])
 
   const resetPagination = useCallback(() => {
     setCurrentPage(0)
-    setCursors([undefined])
   }, [])
 
   const transfersQuery = useQuery(
-    ['dashboard-transfers', routeFilter, currentPage, cursors[currentPage]],
+    ['dashboard-history', currentPage],
     () =>
-      fetchAtomOneTransfers({
-        route: routeFilter === 'all' ? undefined : routeFilter,
-        limit: 20,
-        sortOrder: cursors[currentPage],
-        comparison: 'lt',
+      fetchRelayerHistory({
+        limit: PAGE_SIZE,
+        offset: currentPage * PAGE_SIZE,
+        orderby: 'desc',
       }),
-    { staleTime: 30_000, refetchInterval: 60_000 }
+    { staleTime: 10_000, refetchInterval: 10_000 }
   )
 
-  const statsQuery = useQuery(
-    ['dashboard-stats', timeRange],
-    () => fetchAtomOneTransferStats(timeRange),
-    { staleTime: 300_000, refetchInterval: 300_000 }
+  const summaryQuery = useQuery(
+    ['dashboard-summary'],
+    () => fetchRelayerSummary(),
+    { staleTime: 30_000, refetchInterval: 30_000 }
   )
 
-  const latencyEthQuery = useQuery(
-    ['dashboard-latency-eth'],
-    () => fetchLatencyStats(CHAIN_IDS.osmosis, CHAIN_IDS.ethereum),
-    { staleTime: 300_000 }
-  )
+  const pageTransfers = transfersQuery.data?.data ?? []
 
-  const latencyBaseQuery = useQuery(
-    ['dashboard-latency-base'],
-    () => fetchLatencyStats(CHAIN_IDS.osmosis, CHAIN_IDS.base),
-    { staleTime: 300_000 }
-  )
-
-  const filteredTransfers = useMemo<Transfer[]>(() => {
-    if (!transfersQuery.data) return []
-    if (tokenFilter === 'all') return transfersQuery.data
-    return transfersQuery.data.filter((t) => t.token_symbol === tokenFilter)
-  }, [transfersQuery.data, tokenFilter])
-
-  const totalTransfers = useMemo(() => {
-    if (!statsQuery.data) return 0
-    return statsQuery.data.reduce(
-      (sum, s) => sum + Number(s.total_transfers),
-      0
-    )
-  }, [statsQuery.data])
+  const filteredTransfers = useMemo<RelayerTransfer[]>(() => {
+    return pageTransfers.filter((transfer) => {
+      const tokenMatches =
+        tokenFilter === 'all' ||
+        getRelayerTransferTokenSymbol(transfer) === tokenFilter
+      const routeMatches =
+        routeFilter === 'all' || getRelayerRouteKey(transfer) === routeFilter
+      return tokenMatches && routeMatches
+    })
+  }, [pageTransfers, routeFilter, tokenFilter])
 
   const successRate = useMemo(() => {
-    const transfers = transfersQuery.data
-    if (!transfers || transfers.length === 0) return null
-    const succeeded = transfers.filter((t) => t.success === true).length
-    const total = transfers.filter((t) => t.success !== null).length
-    return total > 0 ? Math.round((succeeded / total) * 100) : null
-  }, [transfersQuery.data])
+    if (pageTransfers.length === 0) return null
+    const succeeded = pageTransfers.filter((t) => t.status === 2).length
+    return Math.round((succeeded / pageTransfers.length) * 100)
+  }, [pageTransfers])
 
-  const medianLatency = useMemo(() => {
-    const eth = latencyEthQuery.data?.[0]?.secs_until_packet_ack?.median
-    const base = latencyBaseQuery.data?.[0]?.secs_until_packet_ack?.median
-    const vals = [eth, base].filter((v): v is number => v != null)
-    if (vals.length === 0) return null
-    return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
-  }, [latencyEthQuery.data, latencyBaseQuery.data])
+  const processingCount = useMemo(
+    () => pageTransfers.filter((t) => t.status === 0 || t.status === 1).length,
+    [pageTransfers]
+  )
 
-  const chartData = useMemo<ChartPoint[]>(() => {
-    if (!statsQuery.data) return []
-    return aggregateChartData(statsQuery.data)
-  }, [statsQuery.data])
+  const failedCount = useMemo(
+    () => pageTransfers.filter((t) => t.status === 3).length,
+    [pageTransfers]
+  )
 
-  // Derive active routes from actual traffic data (fixes Vue hardcoded "4")
-  const activeRoutes = useMemo(() => {
-    if (!statsQuery.data) return { count: 0, chains: '' }
-    const activePairs = new Set(
-      statsQuery.data
-        .filter((s) => Number(s.total_transfers) > 0)
-        .map(
-          (s) =>
-            `${s.source_universal_chain_id}:${s.destination_universal_chain_id}`
-        )
-    )
-    const chainIds = new Set<string>()
-    statsQuery.data.forEach((s) => {
-      if (Number(s.total_transfers) > 0) {
-        chainIds.add(s.source_universal_chain_id)
-        chainIds.add(s.destination_universal_chain_id)
-      }
-    })
-    const chains = Array.from(chainIds)
-      .map((id) => CHAIN_DISPLAY[id]?.name ?? id)
-      .join(', ')
-    return { count: activePairs.size, chains }
-  }, [statsQuery.data])
+  const chartData = useMemo<ChartPoint[]>(
+    () => aggregateChartData(filteredTransfers),
+    [filteredTransfers]
+  )
+
+  const totalTransfers = summaryQuery.data?.total ?? 0
 
   const nextPage = useCallback(() => {
-    const transfers = transfersQuery.data
-    if (transfers && transfers.length > 0) {
-      const lastSortOrder = transfers[transfers.length - 1].sort_order
-      setCursors((prev) => {
-        const next = [...prev]
-        next[currentPage + 1] = lastSortOrder
-        return next
-      })
-      setCurrentPage(currentPage + 1)
-    }
-  }, [transfersQuery.data, currentPage])
+    setCurrentPage((page) => page + 1)
+  }, [])
 
   const prevPage = useCallback(() => {
-    if (currentPage > 0) setCurrentPage(currentPage - 1)
-  }, [currentPage])
+    setCurrentPage((page) => Math.max(page - 1, 0))
+  }, [])
 
   return {
     tokenFilter,
     setTokenFilter,
     routeFilter,
     setRouteFilter,
-    timeRange,
-    setTimeRange,
     filteredTransfers,
     transfersLoading: transfersQuery.isLoading,
     transfersError: transfersQuery.error as Error | null,
-    statsLoading: statsQuery.isLoading,
-    statsError: statsQuery.error as Error | null,
+    summaryLoading: summaryQuery.isLoading,
+    summaryError: summaryQuery.error as Error | null,
     chartData,
     totalTransfers,
     successRate,
-    medianLatency,
-    activeRoutes,
+    processingCount,
+    failedCount,
     currentPage,
     nextPage,
     prevPage,
     resetPagination,
-    hasNextPage: (transfersQuery.data?.length ?? 0) >= 20,
+    hasNextPage:
+      pageTransfers.length >= PAGE_SIZE &&
+      (currentPage + 1) * PAGE_SIZE < totalTransfers,
     hasPrevPage: currentPage > 0,
-    transfersCount: transfersQuery.data?.length ?? 0,
+    transfersCount: pageTransfers.length,
   }
 }

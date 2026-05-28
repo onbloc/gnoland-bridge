@@ -1,6 +1,6 @@
 import { ReactElement } from 'react'
 
-import type { TokenFilter, RouteFilter, TimeRange } from 'hooks/useDashboard'
+import type { TokenFilter, RouteFilter } from 'hooks/useDashboard'
 
 const selectStyle: React.CSSProperties = {
   height: 32,
@@ -18,17 +18,13 @@ const selectStyle: React.CSSProperties = {
 const DashboardFilters = ({
   tokenFilter,
   routeFilter,
-  timeRange,
   onTokenChange,
   onRouteChange,
-  onTimeRangeChange,
 }: {
   tokenFilter: TokenFilter
   routeFilter: RouteFilter
-  timeRange: TimeRange
   onTokenChange: (v: TokenFilter) => void
   onRouteChange: (v: RouteFilter) => void
-  onTimeRangeChange: (v: TimeRange) => void
 }): ReactElement => (
   <div className="hstack" style={{ flexWrap: 'wrap', gap: 'var(--space-2)' }}>
     <select
@@ -37,8 +33,8 @@ const DashboardFilters = ({
       onChange={(e): void => onTokenChange(e.target.value as TokenFilter)}
     >
       <option value="all">All tokens</option>
-      <option value="ATONE">ATONE</option>
-      <option value="PHOTON">PHOTON</option>
+      <option value="GNOT">GNOT</option>
+      <option value="WGNOT">WGNOT</option>
     </select>
 
     <select
@@ -47,20 +43,8 @@ const DashboardFilters = ({
       onChange={(e): void => onRouteChange(e.target.value as RouteFilter)}
     >
       <option value="all">All routes</option>
-      <option value="atomone-ethereum">AtomOne ↔ Ethereum</option>
-      <option value="atomone-base">AtomOne ↔ Base</option>
-    </select>
-
-    <select
-      value={timeRange}
-      style={selectStyle}
-      onChange={(e): void =>
-        onTimeRangeChange(Number(e.target.value) as TimeRange)
-      }
-    >
-      <option value={7}>7 days</option>
-      <option value={30}>30 days</option>
-      <option value={90}>90 days</option>
+      <option value="gno-ethereum">Gno.land to Ethereum</option>
+      <option value="ethereum-gno">Ethereum to Gno.land</option>
     </select>
   </div>
 )

@@ -7,6 +7,14 @@
     {
       "source": "/gno-rpc/:path*",
       "destination": "http://23.20.153.250:26657/:path*"
+    },
+    {
+      "source": "/relayer-api",
+      "destination": "https://rpc.bridge.onbloc.xyz:8080/"
+    },
+    {
+      "source": "/relayer-api/:path*",
+      "destination": "https://rpc.bridge.onbloc.xyz:8080/:path*"
     }
   ],
   "headers": [

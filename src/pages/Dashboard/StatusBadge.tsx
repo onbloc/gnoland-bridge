@@ -1,19 +1,21 @@
 import { ReactElement } from 'react'
 
+import type { RelayerTransferStatus } from 'packages/relayer-api'
+
 const StatusBadge = ({
-  success,
+  status,
 }: {
-  success: boolean | null
+  status: RelayerTransferStatus
 }): ReactElement => {
-  if (success === true) {
+  if (status === 2) {
     return (
       <span className="tag tag--success">
         <span className="dot" />
-        Success
+        Done
       </span>
     )
   }
-  if (success === false) {
+  if (status === 3) {
     return (
       <span className="tag tag--fail">
         <span className="dot" />
@@ -21,10 +23,18 @@ const StatusBadge = ({
       </span>
     )
   }
+  if (status === 0) {
+    return (
+      <span className="tag tag--pending">
+        <span className="bridge-dot-pulse" />
+        Detected
+      </span>
+    )
+  }
   return (
     <span className="tag tag--pending">
       <span className="bridge-dot-pulse" />
-      Pending
+      Processing
     </span>
   )
 }

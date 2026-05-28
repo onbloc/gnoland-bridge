@@ -13,8 +13,10 @@ import BlockChainNetwork from './BlockChainNetwork'
 import FinishButton from './FinishButton'
 import SelectBridge from 'components/SelectBridge'
 import NetworkSelector from 'components/NetworkSelector'
+import YourActivity from 'components/YourActivity'
 import AuthStore from 'store/AuthStore'
 import useAuth from 'hooks/useAuth'
+import useWalletActivity from 'hooks/useWalletActivity'
 import SendStore from 'store/SendStore'
 import { BlockChainType } from 'types/network'
 import { WarningInfo } from './SendForm/WarningInfo'
@@ -55,6 +57,7 @@ const Send = (): ReactElement => {
 
   const { validateFee } = useSendValidate()
   const feeValidationResult = validateFee()
+  const walletActivity = useWalletActivity()
 
   const onClickBack = (): void => setStatus(ProcessStatus.Input)
 
@@ -94,7 +97,7 @@ const Send = (): ReactElement => {
   const isFinished = [ProcessStatus.Done, ProcessStatus.Failed].includes(status)
 
   return (
-    <div key={String(isLoggedIn)} style={{ maxWidth: 560, margin: '0 auto' }}>
+    <div key={String(isLoggedIn)} className="send-page">
       <div className="bridge-card">
         <div className="bridge-card__head">
           {isInput ? (
@@ -207,6 +210,18 @@ const Send = (): ReactElement => {
           )}
         </div>
       </div>
+      {isInput && (
+        <YourActivity
+          items={walletActivity.items}
+          loading={walletActivity.loading}
+          error={walletActivity.error?.message}
+          emptyText={
+            walletActivity.senderAddress
+              ? 'No activity yet'
+              : 'Connect a source wallet to view activity'
+          }
+        />
+      )}
     </div>
   )
 }
