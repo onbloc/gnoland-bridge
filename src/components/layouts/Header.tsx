@@ -122,9 +122,6 @@ const Header = (): ReactElement => {
           <NavLink to="/dashboard" className={navLinkCls}>
             Dashboard
           </NavLink>
-          <NavLink to="/token-init" className={navLinkCls}>
-            Token Init
-          </NavLink>
         </nav>
         <div className="b-header__actions">
           <ThemeToggle />
