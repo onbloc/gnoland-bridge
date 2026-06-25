@@ -155,9 +155,9 @@ export const makeGnoDirectToEthTransaction = async (
   // and the realm's requireSentCoin compares against the operand baseAmount.
   const sendAmount = `${amount.toString()}${baseToken}`
 
-  // RawSend signature (gno-ibc PR, primitive-args wrapper):
-  //   func RawSend(cur realm, channelIdStr, timeoutNsStr, saltHex,
-  //                versionStr, opcodeStr, operandHex string) core.Packet
+  // SendRaw signature (gno.land/r/onbloc/ibc/union/apps/ucs03_zkgm):
+  //   func SendRaw(cur realm, channelId uint32, timeoutTimestamp uint64,
+  //                saltHex string, version uint8, opcode uint8, operandHex string)
   // saltHex and operandHex are passed without the `0x` prefix.
   const messages: GnoVmCallMessage[] = [
     {
