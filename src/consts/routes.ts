@@ -17,12 +17,10 @@ export type BridgeRoute = {
   via?: BridgeVia
 }
 
-// Wrapped ugnot created by the successful INITIALIZE ack at Gno block 939.
-// Packet hash:
-// 0x33b153dae8f93bc9f51b7608e90fb2112d214c75a85a93c160a1024009f63980
+// Wrapped ugnot predicted by predictWrappedTokenV2 for channel 31 (gno ch 1).
 const WRAPPED_UGNOT_SEPOLIA =
   import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA ||
-  '0x7FEd1d819109fb7a095137bF867aBe61DB36c99c'
+  '0xD3fCBD2aD2DB9F204f60077F874C6159D77000Df'
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
@@ -36,8 +34,8 @@ const routes: BridgeRoute[] = [
     chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev',
     baseToken: 'ugnot',
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
-    source_channel: '2',
-    dest_channel: '28',
+    source_channel: '1',
+    dest_channel: '31',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -48,8 +46,8 @@ const routes: BridgeRoute[] = [
     chain_id: '11155111',
     baseToken: WRAPPED_UGNOT_SEPOLIA,
     quoteToken: 'ugnot',
-    source_channel: '28',
-    dest_channel: '2',
+    source_channel: '31',
+    dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
   },
