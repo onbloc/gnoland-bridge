@@ -109,7 +109,7 @@ export const queryChannelState = async (
   channelId: number
 ): Promise<ChannelInfo | null> => {
   const r = await vmQEval(
-    `gno.land/r/core/ibc/v1/core.QueryChannel(${channelId})`
+    `gno.land/r/onbloc/ibc/union/core.QueryChannel(${channelId})`
   )
   if (r.errorType) return null
   if (!r.dataUtf8) return null

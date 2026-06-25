@@ -7,12 +7,11 @@ import { ChannelId } from '@unionlabs/sdk/schema/channel'
 export const GNO_DIRECT_ZKGM_ENABLED =
   import.meta.env.VITE_GNO_DIRECT_ZKGM === 'true'
 
-// Canonical import alias is `gnoswap` (gnomod.toml in gno-ibc declares the
-// module name as `gnoswap/...` even though the on-disk path is `core/...`).
-// PR #24 happy-path scripts use these exact strings.
-export const GNO_ZKGM_REALM_PATH = 'gno.land/r/gnoswap/ibc/v1/apps/zkgm'
-export const GNO_ZKGM_TYPES_PATH = 'gno.land/p/gnoswap/ibc/zkgm'
-export const GNO_CORE_PATH = 'gno.land/r/core/ibc/v1/core'
+// Deployed realm paths on the devnet. The on-disk module names in gnomod.toml
+// differ from the deployed aliases; use the deployed names for /vm.m_call.
+export const GNO_ZKGM_REALM_PATH = 'gno.land/r/onbloc/ibc/union/apps/ucs03_zkgm'
+export const GNO_ZKGM_TYPES_PATH = 'gno.land/p/onbloc/ibc/union/zkgm'
+export const GNO_CORE_PATH = 'gno.land/r/onbloc/ibc/union/core'
 export const GNO_U256_PATH = 'gno.land/p/gnoswap/uint256'
 
 // Instruction header (matches `p/core/ibc/zkgm/constants.gno`).
@@ -38,7 +37,7 @@ export const GNO_INIT_TOKEN_DECIMALS = 6
 export const GNO_INIT_DEFAULT_BASE_AMOUNT = '1000000'
 export const GNO_INIT_DEFAULT_QUOTE_TOKEN =
   (import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA as string | undefined) ||
-  '0x7FEd1d819109fb7a095137bF867aBe61DB36c99c'
+  '0xD3fCBD2aD2DB9F204f60077F874C6159D77000Df'
 export const GNO_INIT_RAW_OPERAND_HEX = ''
 
 const GNO_INIT_IMPLEMENTATION_ADDRESS_DEFAULT =
