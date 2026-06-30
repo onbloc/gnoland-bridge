@@ -17,10 +17,10 @@ export type BridgeRoute = {
   via?: BridgeVia
 }
 
-// Wrapped ugnot predicted by predictWrappedTokenV2 for channel 31 (gno ch 1).
+// Wrapped ugnot predicted by predictWrappedTokenV2 for channel 33 (gno ch 1).
 const WRAPPED_UGNOT_SEPOLIA =
   import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA ||
-  '0xD3fCBD2aD2DB9F204f60077F874C6159D77000Df'
+  '0xAdD526520802023E7b80b3636864B24628De9d71'
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
@@ -35,7 +35,7 @@ const routes: BridgeRoute[] = [
     baseToken: 'ugnot',
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
     source_channel: '1',
-    dest_channel: '31',
+    dest_channel: '33',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -46,7 +46,7 @@ const routes: BridgeRoute[] = [
     chain_id: '11155111',
     baseToken: WRAPPED_UGNOT_SEPOLIA,
     quoteToken: 'ugnot',
-    source_channel: '31',
+    source_channel: '33',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
