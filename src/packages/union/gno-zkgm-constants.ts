@@ -7,6 +7,10 @@ import { ChannelId } from '@unionlabs/sdk/schema/channel'
 export const GNO_DIRECT_ZKGM_ENABLED =
   import.meta.env.VITE_GNO_DIRECT_ZKGM === 'true'
 
+// Feature flag: show the Token Init operator page and its nav link.
+// Default off — this is an operator-only tool, not user-facing.
+export const TOKEN_INIT_ENABLED = import.meta.env.VITE_TOKEN_INIT === 'true'
+
 // Deployed realm paths on the devnet. The on-disk module names in gnomod.toml
 // differ from the deployed aliases; use the deployed names for /vm.m_call.
 export const GNO_ZKGM_REALM_PATH = 'gno.land/r/onbloc/ibc/union/apps/ucs03_zkgm'

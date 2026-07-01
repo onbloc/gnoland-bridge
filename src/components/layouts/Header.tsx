@@ -20,6 +20,7 @@ import {
   resolveBridgeNetworkOption,
 } from 'consts/gnoNetworks'
 import { sepoliaChain } from 'packages/union/evm-chains'
+import { TOKEN_INIT_ENABLED } from 'packages/union/gno-zkgm-constants'
 
 const ADENA_SITE_NAME = 'Gno.land Bridge'
 
@@ -122,6 +123,11 @@ const Header = (): ReactElement => {
           <NavLink to="/dashboard" className={navLinkCls}>
             Dashboard
           </NavLink>
+          {TOKEN_INIT_ENABLED && (
+            <NavLink to="/token-init" className={navLinkCls}>
+              Token Init
+            </NavLink>
+          )}
         </nav>
         <div className="b-header__actions">
           <ThemeToggle />
