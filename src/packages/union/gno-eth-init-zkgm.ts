@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect'
 import * as Schema from 'effect/Schema'
 import { encodeAbiParameters, keccak256, parseAbiParameters } from 'viem'
 
-import { stripHexPrefix, utf8ToHex } from './gno-abi'
+import { isGrc20BaseToken, stripHexPrefix, utf8ToHex } from './gno-abi'
 import { encodeTokenOrderV2Hex } from './gno-token-order'
 import {
   GNO_DIRECT_GAS_FEE,
@@ -185,8 +185,12 @@ export const makeGnoDirectToEthInitializeTransaction = async (
   const hash = keccak256(raw)
 
   // Native-token INITIALIZE is also a token send. gno-ibc requires the
-  // attached coin to match TokenOrderV2.BaseAmount exactly.
-  const sendAmount = `${amount.toString()}${baseToken}`
+  // attached coin to match TokenOrderV2.BaseAmount exactly. GRC20 base
+  // tokens are pulled via TransferFrom instead (sender must Approve the
+  // realm address beforehand), so `send` must stay empty for them.
+  const sendAmount = isGrc20BaseToken(baseToken)
+    ? ''
+    : `${amount.toString()}${baseToken}`
 
   const messages: GnoVmCallMessage[] = [
     {

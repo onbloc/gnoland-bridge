@@ -48,6 +48,65 @@ const parseCoinAmount = (coinList: string, denom: string): string => {
   return '0'
 }
 
+// GRC20 tokens are identified by their realm package path (e.g.
+// 'gno.land/r/demo/defi/foo20'), which always contains a '/'. Native coin
+// denoms (ugnot, wugnot) never do, so this is enough to route each whiteList
+// entry to the right query. Multi-token factory realms (e.g. grc20factory,
+// which manage several symbols behind one pkgpath) register each token
+// under grc20reg using fqname's '<pkgPath>.<symbol>' key, since BalanceOf
+// there takes the symbol as an extra argument.
+const isGrc20PkgPath = (token: string): boolean => token.includes('/')
+
+// Splits a grc20reg-style '<pkgPath>.<symbol>' key back into its parts. The
+// dot must be looked for after the last '/' — pkgPath itself always
+// contains a dot (the 'gno.land' domain prefix), so a naive last-dot split
+// would cut the domain instead of the appended symbol.
+const parseGrc20Token = (
+  token: string
+): { pkgPath: string; symbol?: string } => {
+  const lastSlash = token.lastIndexOf('/')
+  const dotIndex = token.indexOf('.', lastSlash + 1)
+  if (dotIndex === -1) return { pkgPath: token }
+  return { pkgPath: token.slice(0, dotIndex), symbol: token.slice(dotIndex + 1) }
+}
+
+// Reads a GRC20 balance via the realm's BalanceOf function using `vm/qeval`,
+// which returns the plain string result of the expression (e.g. '"1000000"')
+// rather than the JSON-encoded form `vm/qeval_json` uses.
+const fetchGrc20Balance = async (
+  rpc: string,
+  token: string,
+  address: string
+): Promise<string> => {
+  if (!address) return '0'
+  const url = rpc.replace(/\/$/, '')
+  const { pkgPath, symbol } = parseGrc20Token(token)
+  const expression = symbol
+    ? `BalanceOf("${symbol}", "${address}")`
+    : `BalanceOf("${address}")`
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: Date.now(),
+      method: 'abci_query',
+      params: ['vm/qeval', `${pkgPath}.${expression}`, '0', false],
+    }),
+  })
+  if (!res.ok) {
+    throw new Error(`Gno.land RPC ${res.status}`)
+  }
+
+  const json = await res.json()
+  const encoded: string | undefined = json?.result?.response?.ResponseBase?.Data
+  if (!encoded) return '0'
+
+  const decoded = atob(encoded).replace(/"/g, '').trim()
+  return /^\d+$/.test(decoded) ? decoded : '0'
+}
+
 const useGnoBalance = (): {
   getGnoBalances: ({
     whiteList,
@@ -90,16 +149,37 @@ const useGnoBalance = (): {
       whiteList,
     })
 
+    const nativeDenoms = whiteList.filter((token) => !isGrc20PkgPath(token))
+    const grc20Tokens = whiteList.filter((token) => isGrc20PkgPath(token))
+
     try {
       const coinList = await fetchCoinList(rpc, userAddress)
       console.log('[gno-balance] received', { rpc, coinList })
-      for (const token of whiteList) {
-        list[token] = parseCoinAmount(coinList, token)
+      for (const denom of nativeDenoms) {
+        list[denom] = parseCoinAmount(coinList, denom)
       }
     } catch (e) {
-      console.error('Failed to fetch Gno.land balances:', e, { rpc, chainId })
-      return zeroFill()
+      console.error('Failed to fetch Gno.land coin balances:', e, {
+        rpc,
+        chainId,
+      })
+      for (const denom of nativeDenoms) list[denom] = '0'
     }
+
+    await Promise.all(
+      grc20Tokens.map(async (token) => {
+        try {
+          list[token] = await fetchGrc20Balance(rpc, token, userAddress)
+        } catch (e) {
+          console.error('Failed to fetch GRC20 balance:', e, {
+            rpc,
+            chainId,
+            token,
+          })
+          list[token] = '0'
+        }
+      })
+    )
 
     return list
   }
