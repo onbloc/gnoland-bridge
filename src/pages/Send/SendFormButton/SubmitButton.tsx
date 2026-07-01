@@ -47,6 +47,7 @@ const SubmitButton = (): ReactElement => {
   const onClickSubmit = async (): Promise<void> => {
     setErrorMessage('')
     setWaitForReceiptError('')
+    setStatus(ProcessStatus.Submit)
 
     try {
       const submitResult = await submitRequestTx()
@@ -55,17 +56,24 @@ const SubmitButton = (): ReactElement => {
       if (submitResult.success) {
         setStatus(ProcessStatus.Done)
       } else {
+        setStatus(ProcessStatus.Confirm)
         setErrorMessage(submitResult.errorMessage || 'Transaction failed')
         setWaitForReceiptError(
           submitResult.errorMessage || 'Transaction failed'
         )
       }
     } catch (error) {
+      setStatus(ProcessStatus.Confirm)
       const message = error instanceof Error ? error.message : 'Unknown error'
       setErrorMessage(message)
       setWaitForReceiptError(message)
     }
   }
+
+  const loadingLabel =
+    status === ProcessStatus.Submit
+      ? 'Sign transaction in wallet'
+      : 'Waiting for confirmation…'
 
   return (
     <>
@@ -73,7 +81,7 @@ const SubmitButton = (): ReactElement => {
         {loading ? (
           <>
             <CircularProgress size={16} />
-            Waiting for confirmation…
+            {loadingLabel}
           </>
         ) : (
           'Sign & bridge'
