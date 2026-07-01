@@ -49,7 +49,7 @@ export const GNO_NETWORKS = {
     id: 'dev',
     default: true,
     main: false,
-    chainId: 'dev',
+    chainId: 'dev.ibc',
     chainName: 'Gno.land',
     networkId: 'dev',
     networkName: 'Local',
@@ -115,6 +115,6 @@ export const getBridgeGnoNetwork = (mode?: BridgeNetworkMode): GnoNetwork =>
   GNO_NETWORKS[resolveBridgeNetworkOption(mode).gnoNetworkId]
 
 export const resolveGnoNetwork = (chainId?: string): GnoNetwork | undefined =>
-  chainId && chainId in GNO_NETWORKS
-    ? GNO_NETWORKS[chainId as GnoNetworkId]
+  chainId
+    ? Object.values(GNO_NETWORKS).find((n) => n.chainId === chainId)
     : undefined

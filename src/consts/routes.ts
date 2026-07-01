@@ -31,7 +31,7 @@ const routes: BridgeRoute[] = [
     src: 'gnoland',
     dest: 'ethereum',
     denom: 'ugnot',
-    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev',
+    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
     baseToken: 'ugnot',
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
     source_channel: '1',
