@@ -50,9 +50,9 @@ export const GNO_NETWORKS = {
     default: true,
     main: false,
     chainId: 'dev.ibc',
-    chainName: 'Gno.land',
-    networkId: 'dev',
-    networkName: 'Local',
+    chainName: 'Gno-IBC-DEV',
+    networkId: 'dev.ibc',
+    networkName: 'IBC Devnet',
     addressPrefix: 'g',
     rpcUrl: 'https://rpc.bridge.onbloc.xyz/',
     indexerUrl: '',
@@ -79,11 +79,11 @@ export const DEFAULT_GNO_NETWORK = GNO_NETWORKS.dev
 export const BRIDGE_NETWORK_OPTIONS: BridgeNetworkOption[] = [
   {
     id: 'dev',
-    label: 'Local',
+    label: 'Gno-IBC-DEV',
     gnoNetworkId: 'dev',
     evmChainId: 11155111,
     supported: true,
-    helperText: 'dev',
+    helperText: 'dev.ibc',
   },
   {
     id: 'test-13',
@@ -116,5 +116,5 @@ export const getBridgeGnoNetwork = (mode?: BridgeNetworkMode): GnoNetwork =>
 
 export const resolveGnoNetwork = (chainId?: string): GnoNetwork | undefined =>
   chainId
-    ? Object.values(GNO_NETWORKS).find((n) => n.chainId === chainId)
+    ? Object.values(GNO_NETWORKS).find((network) => network.chainId === chainId)
     : undefined
