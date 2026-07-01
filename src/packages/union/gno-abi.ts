@@ -33,3 +33,11 @@ export const bytesToHex = (bytes: Uint8Array): `0x${string}` =>
 
 export const stripHexPrefix = (hex: string): string =>
   hex.startsWith('0x') || hex.startsWith('0X') ? hex.slice(2) : hex
+
+// GRC20 base tokens are identified by their realm package path (e.g.
+// 'gno.land/r/demo/defi/grc20factory'), which always contains a '/'. Native
+// coin denoms (ugnot, wugnot) never do. The zkgm realm takes custody of
+// GRC20 tokens via TransferFrom (requires a prior Approve to the realm
+// address) instead of the /vm.m_call `send` field used for native coins.
+export const isGrc20BaseToken = (baseToken: string): boolean =>
+  baseToken.includes('/')

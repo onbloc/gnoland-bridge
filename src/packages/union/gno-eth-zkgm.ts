@@ -4,7 +4,7 @@ import * as Effect from 'effect/Effect'
 import * as Schema from 'effect/Schema'
 import { encodeAbiParameters, keccak256, parseAbiParameters } from 'viem'
 
-import { stripHexPrefix, utf8ToHex } from './gno-abi'
+import { isGrc20BaseToken, stripHexPrefix, utf8ToHex } from './gno-abi'
 import { encodeTokenOrderV2Hex } from './gno-token-order'
 import {
   GNO_CALL_GAS_WANTED,
@@ -150,10 +150,15 @@ export const makeGnoDirectToEthTransaction = async (
   ])
   const hash = keccak256(raw)
 
-  // ESCROW Kind requires the native deposit to flow into the ZKGM realm; the
-  // /vm.m_call `send` field carries the raw denom amount (e.g. "1000000ugnot")
-  // and the realm's requireSentCoin compares against the operand baseAmount.
-  const sendAmount = `${amount.toString()}${baseToken}`
+  // ESCROW Kind requires the deposit to flow into the ZKGM realm. For native
+  // coins, the /vm.m_call `send` field carries the raw denom amount (e.g.
+  // "1000000ugnot") and the realm's requireSentCoin compares against the
+  // operand baseAmount. GRC20 base tokens are pulled by the realm via
+  // TransferFrom instead, so `send` must stay empty — the sender needs to
+  // have Approve()'d the realm address beforehand.
+  const sendAmount = isGrc20BaseToken(baseToken)
+    ? ''
+    : `${amount.toString()}${baseToken}`
 
   // SendRaw signature (gno.land/r/onbloc/ibc/union/apps/ucs03_zkgm):
   //   func SendRaw(cur realm, channelId uint32, timeoutTimestamp uint64,
