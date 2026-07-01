@@ -21,12 +21,12 @@ export default defineConfig({
       // the gno-ibc devnet is plain HTTP, so client-side fetches would hit
       // a mixed-content block; routing through same-origin avoids it.
       '/gno-rpc': {
-        target: 'http://23.20.153.250:26657',
+        target: 'https://rpc.bridge.onbloc.xyz',
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/gno-rpc/, ''),
       },
       '/relayer-api': {
-        target: 'https://rpc.bridge.onbloc.xyz:8080',
+        target: 'http://34.236.55.117:8080',
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/relayer-api/, ''),
       },
