@@ -1,3 +1,5 @@
+import { WRAPPED_UGNOT_SEPOLIA } from 'packages/union/gno-zkgm-constants'
+
 // 'osmosis-hook'  legacy 2-hop via Osmosis wasm-hook intermediary
 //                 (a1-eth-hook / eth-a1-hook). Default when unspecified.
 // 'gno-direct'    single-hop via Gno-side ZKGM realm (gno-eth-zkgm).
@@ -17,13 +19,8 @@ export type BridgeRoute = {
   via?: BridgeVia
 }
 
-// Wrapped ugnot predicted by predictWrappedTokenV2 for channel 33 (gno ch 1).
-const WRAPPED_UGNOT_SEPOLIA =
-  import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA ||
-  '0xAdD526520802023E7b80b3636864B24628De9d71'
-
 // Wrapped FOO (grc20factory.FOO), created via a Gno->Eth INITIALIZE for
-// channel 33 (gno ch 1).
+// channel 36 (gno ch 1).
 const WRAPPED_FOO_SEPOLIA =
   import.meta.env.VITE_WRAPPED_FOO_SEPOLIA ||
   '0x4b2cEb2dCC1fE3f561aF283A18675eea6cEb6e11'
@@ -41,18 +38,18 @@ const routes: BridgeRoute[] = [
     baseToken: 'ugnot',
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
     source_channel: '1',
-    dest_channel: '33',
+    dest_channel: '36',
     metadata: '0x',
     via: 'gno-direct',
   },
   {
     src: 'ethereum',
     dest: 'gnoland',
-    denom: 'wugnot',
+    denom: 'ugnot',
     chain_id: '11155111',
     baseToken: WRAPPED_UGNOT_SEPOLIA,
     quoteToken: 'ugnot',
-    source_channel: '33',
+    source_channel: '36',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -65,21 +62,36 @@ const routes: BridgeRoute[] = [
     baseToken: 'gno.land/r/demo/defi/grc20factory.FOO',
     quoteToken: WRAPPED_FOO_SEPOLIA,
     source_channel: '1',
-    dest_channel: '33',
+    dest_channel: '36',
     metadata: '0x',
     via: 'gno-direct',
   },
   {
     src: 'ethereum',
     dest: 'gnoland',
-    denom: 'wfoo',
+    denom: 'gno.land/r/demo/defi/grc20factory.FOO',
     chain_id: '11155111',
     baseToken: WRAPPED_FOO_SEPOLIA,
     quoteToken: 'gno.land/r/demo/defi/grc20factory.FOO',
-    source_channel: '33',
+    source_channel: '36',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
+  },
+  // AtomOne is selectable in the network picker but has no wired send path
+  // yet - this entry only exists so the asset dropdown isn't empty when
+  // AtomOne is the source chain. Balance always shows 0 (see useAsset.ts)
+  // and useBridge.ts's fallback safely rejects any send attempt.
+  {
+    src: 'atomone',
+    dest: 'gnoland',
+    denom: 'uatone',
+    chain_id: 'atomone-1',
+    baseToken: 'uatone',
+    quoteToken: 'uatone',
+    source_channel: '0',
+    dest_channel: '0',
+    metadata: '0x',
   },
 ]
 

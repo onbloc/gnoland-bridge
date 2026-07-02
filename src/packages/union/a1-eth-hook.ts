@@ -26,10 +26,6 @@ import * as Schema from 'effect/Schema'
 import { encodeAbiParameters, keccak256, parseAbiParameters } from 'viem'
 
 import {
-  BASE_CHAIN_ID,
-  BASE_SOURCE_CHANNEL_ID,
-  BASE_ZKGM_ADDRESS,
-  BASEOSMO_SOURCE_CHANNEL_ID,
   cosmosUcs,
   ETH_SOURCE_CHANNEL_ID,
   ETH_ZKGM_ADDRESS,
@@ -88,10 +84,7 @@ export const makeGnolandToEthTransaction = async (
     )
 
     const osmosisChain = yield* ChainRegistry.byUniversalId(OSMOSIS_CHAIN_ID)
-    const targetChain =
-      src === 'ethereum'
-        ? yield* ChainRegistry.byUniversalId(ETHEREUM_CHAIN_ID)
-        : yield* ChainRegistry.byUniversalId(BASE_CHAIN_ID)
+    const targetChain = yield* ChainRegistry.byUniversalId(ETHEREUM_CHAIN_ID)
 
     const refundReceiverOsmosis = Ucs05.CosmosDisplay.make({
       address: Schema.decodeUnknownSync(
@@ -153,14 +146,8 @@ export const makeGnolandToEthTransaction = async (
     const raw = encodeAbiParameters(packetAbi, [
       [
         {
-          sourceChannelId:
-            dest === 'ethereum'
-              ? ETHOSMO_SOURCE_CHANNEL_ID
-              : BASEOSMO_SOURCE_CHANNEL_ID,
-          destinationChannelId:
-            dest === 'ethereum'
-              ? ETH_SOURCE_CHANNEL_ID
-              : BASE_SOURCE_CHANNEL_ID,
+          sourceChannelId: ETHOSMO_SOURCE_CHANNEL_ID,
+          destinationChannelId: ETH_SOURCE_CHANNEL_ID,
           data: packet,
           timeoutHeight: 0n,
           timeoutTimestamp: timeout_timestamp,
@@ -173,13 +160,10 @@ export const makeGnolandToEthTransaction = async (
     return {
       hash,
       wasm: {
-        contract: dest === 'ethereum' ? ETH_ZKGM_ADDRESS : BASE_ZKGM_ADDRESS,
+        contract: ETH_ZKGM_ADDRESS,
         msg: {
           send: {
-            channel_id:
-              dest === 'ethereum'
-                ? ETHOSMO_SOURCE_CHANNEL_ID
-                : BASEOSMO_SOURCE_CHANNEL_ID,
+            channel_id: ETHOSMO_SOURCE_CHANNEL_ID,
             timeout_height: '0',
             timeout_timestamp,
             salt,

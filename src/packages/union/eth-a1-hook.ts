@@ -36,12 +36,6 @@ import {
 } from 'viem'
 
 import {
-  BASE_BYTECODE_BASE_CHECKSUM,
-  BASE_CHAIN_ID,
-  BASE_MODULE_HASH,
-  BASE_SOURCE_CHANNEL_ID,
-  BASEOSMO_SOURCE_CHANNEL_ID,
-  CANONICAL_BASE_ZKGM,
   CANONICAL_ETH_ZKGM,
   cosmosUcs,
   ETH_BYTECODE_BASE_CHECKSUM,
@@ -52,7 +46,6 @@ import {
   ETHOSMO_SOURCE_CHANNEL_ID,
   OSMOSIS_CHAIN_ID,
   OSMOSIS_TO_GNOLAND_CHANNEL,
-  UCS03_BASE_EVM,
   UCS03_ETH_EVM,
 } from './constants'
 
@@ -110,24 +103,13 @@ export const predictProxy = (src: string) =>
 
     const address = yield* pipe(
       Uint8Array.from([
-        ...fromHex(
-          src === 'ethereum' ? ETH_MODULE_HASH : BASE_MODULE_HASH,
-          'bytes'
-        ),
+        ...fromHex(ETH_MODULE_HASH, 'bytes'),
         ...new TextEncoder().encode('wasm'),
         0,
         ...u64toBeBytes(32n),
-        ...fromHex(
-          src === 'ethereum'
-            ? ETH_BYTECODE_BASE_CHECKSUM
-            : BASE_BYTECODE_BASE_CHECKSUM,
-          'bytes'
-        ),
+        ...fromHex(ETH_BYTECODE_BASE_CHECKSUM, 'bytes'),
         ...u64toBeBytes(32n),
-        ...fromHex(
-          src === 'ethereum' ? CANONICAL_ETH_ZKGM : CANONICAL_BASE_ZKGM,
-          'bytes'
-        ),
+        ...fromHex(CANONICAL_ETH_ZKGM, 'bytes'),
         ...u64toBeBytes(32n),
         ...salt,
         ...u64toBeBytes(0n),
@@ -182,15 +164,9 @@ export const makeEthToGnolandTransaction = async (
     )
 
     const osmosisChain = yield* ChainRegistry.byUniversalId(OSMOSIS_CHAIN_ID)
-    const sourceChain =
-      src === 'ethereum'
-        ? yield* ChainRegistry.byUniversalId(ETHEREUM_CHAIN_ID)
-        : yield* ChainRegistry.byUniversalId(BASE_CHAIN_ID)
+    const sourceChain = yield* ChainRegistry.byUniversalId(ETHEREUM_CHAIN_ID)
 
-    const source_channel =
-      src === 'ethereum'
-        ? ETHOSMO_SOURCE_CHANNEL_ID
-        : BASEOSMO_SOURCE_CHANNEL_ID
+    const source_channel = ETHOSMO_SOURCE_CHANNEL_ID
     const proxy = yield* predictProxy(src)({
       path: 0n,
       channel: source_channel,
@@ -242,10 +218,8 @@ export const makeEthToGnolandTransaction = async (
     const request = ZkgmClientRequest.make({
       source: sourceChain,
       destination: osmosisChain,
-      channelId:
-        src === 'ethereum' ? ETH_SOURCE_CHANNEL_ID : BASE_SOURCE_CHANNEL_ID,
-      ucs03Address:
-        src === 'ethereum' ? UCS03_ETH_EVM.address : UCS03_BASE_EVM.address,
+      channelId: ETH_SOURCE_CHANNEL_ID,
+      ucs03Address: UCS03_ETH_EVM.address,
       instruction: batch,
     })
 
@@ -276,12 +250,8 @@ export const makeEthToGnolandTransaction = async (
     const raw = encodeAbiParameters(packetAbi, [
       [
         {
-          sourceChannelId:
-            src === 'ethereum' ? ETH_SOURCE_CHANNEL_ID : BASE_SOURCE_CHANNEL_ID,
-          destinationChannelId:
-            src === 'ethereum'
-              ? ETHOSMO_SOURCE_CHANNEL_ID
-              : BASEOSMO_SOURCE_CHANNEL_ID,
+          sourceChannelId: ETH_SOURCE_CHANNEL_ID,
+          destinationChannelId: ETHOSMO_SOURCE_CHANNEL_ID,
           data: packet,
           timeoutHeight: 0n,
           timeoutTimestamp: eip1193Request.packetMetadata.timeoutTimestamp,

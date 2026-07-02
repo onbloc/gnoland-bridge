@@ -8,6 +8,7 @@ const symbolOfDenom: Record<AssetDenomEnum, AssetSymbolEnum> = {
   [AssetDenomEnum.wugnot]: AssetSymbolEnum.wGNOT,
   [AssetDenomEnum.foo]: AssetSymbolEnum.FOO,
   [AssetDenomEnum.wfoo]: AssetSymbolEnum.wFOO,
+  [AssetDenomEnum.uatone]: AssetSymbolEnum.ATONE,
 }
 
 export default {

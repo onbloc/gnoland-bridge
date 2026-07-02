@@ -54,7 +54,7 @@ const normalizeOperandHexOverride = (raw: string | undefined): string => {
 
 export type GnoToEthInitInput = {
   src: 'gnoland'
-  dest: 'ethereum' | 'base'
+  dest: 'ethereum'
   sender: string
   // EVM recipient for the initial quote amount. The gno-ibc send guide uses
   // the Union authority EOA here.

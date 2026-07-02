@@ -39,17 +39,27 @@ export const GNO_INIT_TOKEN_NAME = 'gno.land'
 export const GNO_INIT_TOKEN_SYMBOL = 'ugnot'
 export const GNO_INIT_TOKEN_DECIMALS = 6
 export const GNO_INIT_DEFAULT_BASE_AMOUNT = '1000000'
-export const GNO_INIT_DEFAULT_QUOTE_TOKEN =
+
+// Wrapped ugnot predicted by predictWrappedTokenV2 for channel 36 (gno ch 1).
+// Single source of truth — also used as the gno-direct route's quote/base
+// token in `consts/routes.ts`.
+export const WRAPPED_UGNOT_SEPOLIA =
   (import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA as string | undefined) ||
-  '0xAdD526520802023E7b80b3636864B24628De9d71'
+  '0x840983858242c710D653931a19F179b0ab33f2A3'
+export const GNO_INIT_DEFAULT_QUOTE_TOKEN = WRAPPED_UGNOT_SEPOLIA
 export const GNO_INIT_RAW_OPERAND_HEX = ''
+
+// EVM-side ZKGM contract (Sepolia testnet) that terminates the gno<->EVM
+// channel pair. Same address is reused as the counterparty port id on the
+// gno-ibc side, and as the default minter below (ZKGM is what mints/burns
+// the wrapped ERC20). Hardcoded because we only operate on Sepolia for now.
+export const ETH_ZKGM_SEPOLIA_ADDRESS =
+  '0x5fbe74a283f7954f10aa04c2edf55578811aeb03' as const
 
 const GNO_INIT_IMPLEMENTATION_ADDRESS_DEFAULT =
   '0xAf739F34ddF951cBC24fdbBa4f76213688E13627'
 const GNO_INIT_AUTHORITY_ADDRESS_DEFAULT =
   '0x40cDFf51aE7487e0b4A4D6e5f86eB15Fb7c1d9f4'
-const GNO_INIT_MINTER_ADDRESS_DEFAULT =
-  '0x5FbE74A283f7954f10AA04C2eDf55578811aeb03'
 
 // Optional env overrides for the EVM-side wrapped-token deploy. Empty string
 // here means "use the form-provided value or zero-address fallback"; the
@@ -63,7 +73,7 @@ export const GNO_INIT_AUTHORITY_ADDRESS =
   GNO_INIT_AUTHORITY_ADDRESS_DEFAULT
 export const GNO_INIT_MINTER_ADDRESS =
   (import.meta.env.VITE_GNO_INIT_MINTER_ADDRESS as string | undefined) ||
-  GNO_INIT_MINTER_ADDRESS_DEFAULT
+  ETH_ZKGM_SEPOLIA_ADDRESS
 
 // Hot-fix escape hatch: if a fully-formed metadata blob is supplied via env,
 // the encoder returns it verbatim instead of building one from the fields.
@@ -93,12 +103,6 @@ const parseChannelId = (raw: string | undefined): number => {
 export const UNION_TO_GNO_CHANNEL_ID = ChannelId.make(
   parseChannelId(import.meta.env.VITE_UNION_TO_GNO_CHANNEL_ID)
 )
-
-// EVM-side ZKGM contract (Sepolia testnet) that terminates the gno<->EVM
-// channel pair. Same address is reused as the counterparty port id on the
-// gno-ibc side. Hardcoded because we only operate on Sepolia for now.
-export const ETH_ZKGM_SEPOLIA_ADDRESS =
-  '0x5fbe74a283f7954f10aa04c2edf55578811aeb03' as const
 
 // Sepolia chain id (EIP-155). Used for MetaMask switch + viem chain selection.
 export const SEPOLIA_CHAIN_ID = 11155111

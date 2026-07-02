@@ -4,7 +4,7 @@ import { createPublicClient, custom, erc20Abi, maxUint256 } from 'viem'
 
 import { makeGnolandToEthTransaction } from 'packages/union/a1-eth-hook'
 import { makeEthToGnolandTransaction } from 'packages/union/eth-a1-hook'
-import { ETH_ZKGM_ADDRESS, BASE_ZKGM_ADDRESS } from 'packages/union/constants'
+import { ETH_ZKGM_ADDRESS } from 'packages/union/constants'
 import { pickEvmChain, sepoliaChain } from 'packages/union/evm-chains'
 import { makeEthToGnoDirectTransaction } from 'packages/union/eth-gno-zkgm'
 import { makeGnoDirectToEthTransaction } from 'packages/union/gno-eth-zkgm'
@@ -64,7 +64,7 @@ const buildBridgeInfo = async (
       memo,
       hash,
       baseToken: route.baseToken,
-      receiver: dest === 'ethereum' ? ETH_ZKGM_ADDRESS : BASE_ZKGM_ADDRESS,
+      receiver: ETH_ZKGM_ADDRESS,
       sourceChannel: `channel-${route.source_channel}`,
     }
   } else {
@@ -153,7 +153,7 @@ export default function useBridge(): UseBridgeReturn {
           const directTx: GnoDirectTxResult =
             await makeGnoDirectToEthTransaction({
               src: 'gnoland',
-              dest: dest as 'ethereum' | 'base',
+              dest: dest as 'ethereum',
               sender: address,
               rcpt,
               amount: BigInt(amount),
@@ -210,7 +210,7 @@ export default function useBridge(): UseBridgeReturn {
           }
         }
 
-        if (src === 'ethereum' || src === 'base') {
+        if (src === 'ethereum') {
           const walletClient = evmWallet?.walletClient
           const address = evmWallet?.address
           if (!walletClient || !address) {
@@ -226,10 +226,6 @@ export default function useBridge(): UseBridgeReturn {
               r.dest.toLowerCase() === dest.toLowerCase() &&
               denom === r.denom
           )
-          // Narrow to ethereum-only for now: makeEthToGnoDirectTransaction's
-          // input type requires src='ethereum', and we have no Base->Gno route
-          // wiring. If a base->gnoland route ships later, both this guard and
-          // the builder's union type need updating together.
           const useDirect =
             GNO_DIRECT_ZKGM_ENABLED &&
             !!route &&
@@ -315,7 +311,7 @@ export default function useBridge(): UseBridgeReturn {
           if (baseToken.startsWith('0x')) {
             const spender = (memo as Record<string, unknown>)
               .to as `0x${string}`
-            const chain = pickEvmChain(fromBlockChain, evmNetwork?.chainId)
+            const chain = pickEvmChain(evmNetwork?.chainId)
             const publicClient = createPublicClient({
               chain,
               transport: custom(window.ethereum!),
