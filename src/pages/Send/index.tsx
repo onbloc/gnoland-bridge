@@ -1,5 +1,5 @@
-import { ReactElement, useEffect, useState } from 'react'
-import { useRecoilState, useRecoilValue } from 'recoil'
+import { ReactElement, useEffect } from 'react'
+import { useRecoilState, useRecoilValue, useSetRecoilState } from 'recoil'
 
 import SendProcessStore, { ProcessStatus } from 'store/SendProcessStore'
 
@@ -18,7 +18,6 @@ import AuthStore from 'store/AuthStore'
 import useAuth from 'hooks/useAuth'
 import useWalletActivity from 'hooks/useWalletActivity'
 import SendStore from 'store/SendStore'
-import { BlockChainType } from 'types/network'
 import { WarningInfo } from './SendForm/WarningInfo'
 
 const STEP_EYEBROW: Partial<Record<ProcessStatus, string>> = {
@@ -49,11 +48,8 @@ const Send = (): ReactElement => {
   const [status, setStatus] = useRecoilState(SendProcessStore.sendProcessStatus)
   const isLoggedIn = useRecoilValue(AuthStore.isLoggedIn)
   const { getLoginStorage } = useAuth()
-  const [initPage, setInitPage] = useState(false)
-  const [toBlockChain, setToBlockChain] = useRecoilState(SendStore.toBlockChain)
-  const [fromBlockChain, setFromBlockChain] = useRecoilState(
-    SendStore.fromBlockChain
-  )
+  const setToBlockChain = useSetRecoilState(SendStore.toBlockChain)
+  const setFromBlockChain = useSetRecoilState(SendStore.fromBlockChain)
 
   const { validateFee } = useSendValidate()
   const feeValidationResult = validateFee()
@@ -62,28 +58,13 @@ const Send = (): ReactElement => {
   const onClickBack = (): void => setStatus(ProcessStatus.Input)
 
   useEffect(() => {
-    setInitPage(true)
     const { lastFromBlockChain, lastToBlockChain } = getLoginStorage()
 
-    const restoredFrom = lastFromBlockChain
-    const restoredTo = lastToBlockChain
-
-    if (restoredFrom) {
-      setFromBlockChain(restoredFrom)
-      restoredTo && setToBlockChain(restoredTo)
+    if (lastFromBlockChain) {
+      setFromBlockChain(lastFromBlockChain)
+      lastToBlockChain && setToBlockChain(lastToBlockChain)
     }
   }, [])
-
-  useEffect(() => {
-    if (initPage) {
-      if (
-        fromBlockChain !== BlockChainType.gnoland &&
-        fromBlockChain !== toBlockChain
-      ) {
-        setToBlockChain(BlockChainType.gnoland)
-      }
-    }
-  }, [fromBlockChain])
 
   const isInput = status === ProcessStatus.Input
   const isConfirmFlow = [

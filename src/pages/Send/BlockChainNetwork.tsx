@@ -20,41 +20,26 @@ const BlockChainNetwork = (): ReactElement => {
   )
   const { setBlockchainStorage } = useAuth()
 
-  const fromOptions = [
-    {
-      label: NETWORK.blockChainName[BlockChainType.gnoland],
-      value: BlockChainType.gnoland,
-      isDisabled: fromBlockChain === BlockChainType.gnoland,
-    },
-    {
-      label: NETWORK.blockChainName[BlockChainType.ethereum],
-      value: BlockChainType.ethereum,
-      isDisabled: fromBlockChain === BlockChainType.ethereum,
-    },
-    {
-      label: NETWORK.blockChainName[BlockChainType.atomone],
-      value: BlockChainType.atomone,
-      isDisabled: fromBlockChain === BlockChainType.atomone,
-    },
+  // Any two distinct chains can pair now (not just gnoland<->X), so each
+  // side just needs to disable whichever value the OTHER side already holds
+  // (a chain can't send to itself). The swap button handles flipping pairs.
+  const allChains = [
+    BlockChainType.gnoland,
+    BlockChainType.ethereum,
+    BlockChainType.atomone,
   ]
 
-  const toOptions = [
-    {
-      label: NETWORK.blockChainName[BlockChainType.gnoland],
-      value: BlockChainType.gnoland,
-      isDisabled: toBlockChain === BlockChainType.gnoland,
-    },
-    {
-      label: NETWORK.blockChainName[BlockChainType.ethereum],
-      value: BlockChainType.ethereum,
-      isDisabled: toBlockChain === BlockChainType.ethereum,
-    },
-    {
-      label: NETWORK.blockChainName[BlockChainType.atomone],
-      value: BlockChainType.atomone,
-      isDisabled: toBlockChain === BlockChainType.atomone,
-    },
-  ]
+  const fromOptions = allChains.map((value) => ({
+    label: NETWORK.blockChainName[value],
+    value,
+    isDisabled: value === fromBlockChain || value === toBlockChain,
+  }))
+
+  const toOptions = allChains.map((value) => ({
+    label: NETWORK.blockChainName[value],
+    value,
+    isDisabled: value === toBlockChain || value === fromBlockChain,
+  }))
 
   const onSwap = (): void => {
     setFromBlockChain(toBlockChain)
@@ -71,10 +56,9 @@ const BlockChainNetwork = (): ReactElement => {
         blockChain={fromBlockChain}
         setBlockChain={(value): void => {
           setFromBlockChain(value)
-          setToBlockChain(BlockChainType.gnoland)
           setBlockchainStorage({
             fromBlockChain: value,
-            toBlockChain: BlockChainType.gnoland,
+            toBlockChain,
           })
         }}
         optionList={fromOptions}
@@ -105,11 +89,8 @@ const BlockChainNetwork = (): ReactElement => {
         blockChain={toBlockChain}
         setBlockChain={(b): void => {
           setToBlockChain(b)
-          if (fromBlockChain !== BlockChainType.gnoland) {
-            setFromBlockChain(BlockChainType.gnoland)
-          }
           setBlockchainStorage({
-            fromBlockChain: BlockChainType.gnoland,
+            fromBlockChain,
             toBlockChain: b,
           })
         }}
