@@ -1,5 +1,7 @@
 import { decodeAbiParameters, parseAbiParameters } from 'viem'
 
+import { GNO_CORE_PATH } from 'packages/union/gno-zkgm-constants'
+
 // Same-origin proxy path; the Vercel rewrite and Vite dev proxy forward
 // it to the gno-ibc devnet, so HTTPS pages don't hit mixed-content blocks.
 const DEFAULT_RPC_URL = '/gno-rpc'
@@ -109,7 +111,7 @@ export const queryChannelState = async (
   channelId: number
 ): Promise<ChannelInfo | null> => {
   const r = await vmQEval(
-    `gno.land/r/onbloc/ibc/union/core.QueryChannel(${channelId})`
+    `${GNO_CORE_PATH}.QueryChannel(${channelId})`
   )
   if (r.errorType) return null
   if (!r.dataUtf8) return null
