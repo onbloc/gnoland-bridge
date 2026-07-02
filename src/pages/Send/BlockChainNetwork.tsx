@@ -32,9 +32,9 @@ const BlockChainNetwork = (): ReactElement => {
       isDisabled: fromBlockChain === BlockChainType.ethereum,
     },
     {
-      label: `${NETWORK.blockChainName[BlockChainType.base]} (paused)`,
-      value: BlockChainType.base,
-      isDisabled: true,
+      label: NETWORK.blockChainName[BlockChainType.atomone],
+      value: BlockChainType.atomone,
+      isDisabled: fromBlockChain === BlockChainType.atomone,
     },
   ]
 
@@ -50,9 +50,9 @@ const BlockChainNetwork = (): ReactElement => {
       isDisabled: toBlockChain === BlockChainType.ethereum,
     },
     {
-      label: `${NETWORK.blockChainName[BlockChainType.base]} (paused)`,
-      value: BlockChainType.base,
-      isDisabled: true,
+      label: NETWORK.blockChainName[BlockChainType.atomone],
+      value: BlockChainType.atomone,
+      isDisabled: toBlockChain === BlockChainType.atomone,
     },
   ]
 

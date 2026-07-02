@@ -65,11 +65,8 @@ const Send = (): ReactElement => {
     setInitPage(true)
     const { lastFromBlockChain, lastToBlockChain } = getLoginStorage()
 
-    const sanitize = (b?: BlockChainType): BlockChainType | undefined =>
-      b === BlockChainType.base ? BlockChainType.ethereum : b
-
-    const restoredFrom = sanitize(lastFromBlockChain)
-    const restoredTo = sanitize(lastToBlockChain)
+    const restoredFrom = lastFromBlockChain
+    const restoredTo = lastToBlockChain
 
     if (restoredFrom) {
       setFromBlockChain(restoredFrom)

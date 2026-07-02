@@ -78,6 +78,21 @@ const routes: BridgeRoute[] = [
     metadata: '0x',
     via: 'gno-direct',
   },
+  // AtomOne is selectable in the network picker but has no wired send path
+  // yet - this entry only exists so the asset dropdown isn't empty when
+  // AtomOne is the source chain. Balance always shows 0 (see useAsset.ts)
+  // and useBridge.ts's fallback safely rejects any send attempt.
+  {
+    src: 'atomone',
+    dest: 'gnoland',
+    denom: 'uatone',
+    chain_id: 'atomone-1',
+    baseToken: 'uatone',
+    quoteToken: 'uatone',
+    source_channel: '0',
+    dest_channel: '0',
+    metadata: '0x',
+  },
 ]
 
 export default routes

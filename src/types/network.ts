@@ -1,7 +1,7 @@
 export enum BlockChainType {
   gnoland = 'gnoland',
   ethereum = 'ethereum',
-  base = 'base',
+  atomone = 'atomone',
 }
 
 export enum BridgeType {
@@ -11,7 +11,7 @@ export enum BridgeType {
 export const availableBridges: Record<BlockChainType, BridgeType[]> = {
   [BlockChainType.gnoland]: [BridgeType.union],
   [BlockChainType.ethereum]: [BridgeType.union],
-  [BlockChainType.base]: [BridgeType.union],
+  [BlockChainType.atomone]: [BridgeType.union],
 }
 
 export function getDefaultBridge(
@@ -26,7 +26,7 @@ export function isGnoChain(chain: BlockChainType): boolean {
 }
 
 export function isEvmChain(chain: BlockChainType): boolean {
-  return chain === BlockChainType.ethereum || chain === BlockChainType.base
+  return chain === BlockChainType.ethereum
 }
 
 // Bech32 prefix for Gno.land addresses (`g1...`). RPC + chainId live in
@@ -35,7 +35,6 @@ export const GNOLAND_BECH32_PREFIX = 'g'
 
 export const EVM_CHAIN_IDS: Record<string, number> = {
   [BlockChainType.ethereum]: 1,
-  [BlockChainType.base]: 8453,
 }
 
 // Sepolia testnet chain id. Used by the gno-direct UNESCROW path because the

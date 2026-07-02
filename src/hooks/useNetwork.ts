@@ -40,9 +40,8 @@ const useNetwork = (): {
           ? 'sepolia.etherscan.io'
           : 'etherscan.io'
       return `https://${host}/${type}/${address}`
-    } else if (fromBlockChain === BlockChainType.base) {
-      return `https://basescan.org/${type}/${address}`
     }
+    // AtomOne is paused (not yet selectable) and has no wired explorer link.
     return ''
   }
 

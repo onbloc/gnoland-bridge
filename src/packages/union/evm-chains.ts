@@ -1,7 +1,5 @@
 import { Chain } from 'viem'
-import { base, mainnet, sepolia } from 'viem/chains'
-
-import { BlockChainType } from 'types/network'
+import { mainnet, sepolia } from 'viem/chains'
 
 const SEPOLIA_RPC_FALLBACK = 'https://ethereum-sepolia-rpc.publicnode.com'
 
@@ -10,15 +8,11 @@ const SEPOLIA_RPC_FALLBACK = 'https://ethereum-sepolia-rpc.publicnode.com'
 export const sepoliaRpcUrl = (): string =>
   import.meta.env.VITE_ETH_RPC_URL || SEPOLIA_RPC_FALLBACK
 
-// Pick the viem chain object that matches the current source plus the actual
-// MetaMask network the user is connected to. Sepolia is honored when the
-// connected chain id is 11155111 even though the bridge UI still labels the
-// network as "Ethereum" - we don't expose Sepolia as a separate option.
-export const pickEvmChain = (
-  fromBlockChain: BlockChainType,
-  walletChainId: number | undefined
-): Chain => {
-  if (fromBlockChain === BlockChainType.base) return base
+// Pick the viem chain object that matches the actual MetaMask network the
+// user is connected to. Sepolia is honored when the connected chain id is
+// 11155111 even though the bridge UI still labels the network as "Ethereum"
+// - we don't expose Sepolia as a separate option.
+export const pickEvmChain = (walletChainId: number | undefined): Chain => {
   if (walletChainId === sepolia.id) return sepolia
   return mainnet
 }

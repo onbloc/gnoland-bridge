@@ -19,8 +19,7 @@ export type InitTokenParams = {
   operandHexOverride?: string
   sourceChannelId: number
   destinationChannelId: number
-  // Defaults to 'ethereum'. Reserved for future Base support.
-  dest?: 'ethereum' | 'base'
+  dest?: 'ethereum'
   // Optional EVM recipient for the initial quote amount.
   receiver?: string
 }

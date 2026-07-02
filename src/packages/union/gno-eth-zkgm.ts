@@ -37,7 +37,7 @@ const toQuoteTokenHex = (quoteToken: string): `0x${string}` =>
 
 export type GnoToEthDirectInput = {
   src: 'gnoland'
-  dest: 'ethereum' | 'base'
+  dest: 'ethereum'
   sender: string
   rcpt: string
   amount: bigint

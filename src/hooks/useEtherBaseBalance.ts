@@ -30,10 +30,10 @@ const useEtherBaseBalance = (): {
       return {}
     }
 
-    const chain = pickEvmChain(fromBlockChain, evmNetwork?.chainId)
+    const chain = pickEvmChain(evmNetwork?.chainId)
     // Sepolia balance reads use an HTTP transport against the configured RPC
     // even when MetaMask is still on mainnet, so the wugnot row populates
-    // before the user runs the switchChain prompt. Mainnet/Base keep the
+    // before the user runs the switchChain prompt. Mainnet keeps the
     // injected provider for parity with the existing flow.
     const useInjected =
       !!window.ethereum && chain.id === (evmNetwork?.chainId ?? chain.id)
