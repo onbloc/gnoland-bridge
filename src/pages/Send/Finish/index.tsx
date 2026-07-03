@@ -118,6 +118,16 @@ const Finish = (): ReactElement => {
     return `https://gnoscan-git-feature-gns-372-onbloc.vercel.app/transactions/details?${params.toString()}`
   }
 
+  // EVM tx hashes are 0x-prefixed -> Etherscan. Gno tx hashes go through
+  // gnoScanUrl above so the RPC override still applies.
+  const SEPOLIA_TX_URL = 'https://sepolia.etherscan.io/tx/'
+  const sourceTxUrl =
+    displayRequestTxResult?.success && displayRequestTxResult.hash
+      ? displayRequestTxResult.hash.startsWith('0x')
+        ? `${SEPOLIA_TX_URL}${displayRequestTxResult.hash}`
+        : gnoScanUrl(displayRequestTxResult.hash)
+      : undefined
+
   return (
     <div
       style={{
@@ -299,12 +309,12 @@ const Finish = (): ReactElement => {
           )}
         {displayRequestTxResult?.success &&
           displayRequestTxResult.hash &&
-          isGnoChain(fromBlockChain) && (
+          sourceTxUrl && (
             <div className="summary__row">
               <span className="summary__k">Source Tx</span>
               <a
                 className="summary__v text-link"
-                href={gnoScanUrl(displayRequestTxResult.hash)}
+                href={sourceTxUrl}
                 target="_blank"
                 rel="noreferrer"
                 style={{ fontSize: 'var(--fs-50)' }}
@@ -318,11 +328,13 @@ const Finish = (): ReactElement => {
       {displayRequestTxResult?.success && displayRequestTxResult.packetHash && (
         <PacketTracker
           packetHash={displayRequestTxResult.packetHash}
-          sourceTxUrl={
-            isGnoChain(displayFromBlockChain) && displayRequestTxResult.hash
-              ? gnoScanUrl(displayRequestTxResult.hash)
-              : undefined
+          sourceTxUrl={sourceTxUrl}
+          senderAddress={
+            isGnoChain(displayFromBlockChain)
+              ? gnoWallet?.address
+              : evmWallet?.address
           }
+          sourceTxHash={displayRequestTxResult.hash}
         />
       )}
     </div>

@@ -5,7 +5,7 @@ export const RELAYER_API_BASE_URL = (
 ).replace(/\/$/, '')
 
 export const RELAYER_CHAIN_IDS = {
-  gnoland: 'dev',
+  gnoland: 'dev.ibc',
   ethereum: '11155111',
 } as const
 
@@ -33,7 +33,8 @@ export interface RelayerTransfer {
   quote_token: string
   quote_amount: string
   height: number
-  tx_hash: string
+  tx_out: string
+  tx_in: string
   timeout_timestamp: number
   status: RelayerTransferStatus
   created_at: string
@@ -82,17 +83,58 @@ const fetchJson = async <T>(url: string): Promise<T> => {
 export const getRelayerStatusUrl = (packetHash: string): string =>
   buildUrl(`/status/${encodeURIComponent(packetHash)}`)
 
+// Outbound legs (EVM chains) use 0x-prefixed hashes -> Etherscan. Everything
+// else is a Gno-side tx hash -> the gnoscan build pointed at the dev.ibc RPC.
+const SEPOLIA_EXPLORER_TX_URL = 'https://sepolia.etherscan.io/tx/'
+const GNOSCAN_TX_URL =
+  'https://gnoscan-git-feature-gns-372-onbloc.vercel.app/transactions/details?type=custom&rpcUrl=http://23.20.153.250:26657/&indexerUrl=&txhash='
+
+export const getTxExplorerUrl = (hash: string): string =>
+  hash.startsWith('0x')
+    ? `${SEPOLIA_EXPLORER_TX_URL}${encodeURIComponent(hash)}`
+    : `${GNOSCAN_TX_URL}${encodeURIComponent(hash)}`
+
 export const fetchWalletTransfers = (
   address: string,
   params: RelayerListParams = {}
 ): Promise<RelayerListResponse> =>
   fetchJson<RelayerListResponse>(
-    buildUrl(`/wallet/${encodeURIComponent(address)}`, {
+    // The relayer backend matches EVM addresses as exact (case-sensitive)
+    // strings, lowercase only. wagmi/viem always return EIP-55 checksummed
+    // (mixed-case) addresses, so an unmodified lookup silently 404s/empties.
+    // Gno bech32 addresses are already lowercase, so this is a no-op for them.
+    buildUrl(`/wallet/${encodeURIComponent(address.toLowerCase())}`, {
       orderby: params.orderby ?? 'desc',
       limit: params.limit ?? 20,
       offset: params.offset ?? 0,
     })
   )
+
+// Mirrors fetchPacketHashFromTx (gno ABCI lookup) for the EVM side. The
+// client-side estimate computed in eth-gno-zkgm.ts can drift from the packet
+// hash the ZKGM contract actually commits on-chain, so once the relayer has
+// indexed the submission tx we prefer its packet_hash over our own guess.
+// Used by PacketTracker to re-resolve a stuck/mismatched estimate mid-poll.
+export const fetchPacketHashByTxHash = async (
+  address: string,
+  txHash: string,
+  retries = 6,
+  delayMs = 800
+): Promise<string | null> => {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
+    try {
+      const { data } = await fetchWalletTransfers(address, { limit: 5 })
+      const match = data.find((transfer) => transfer.tx_out === txHash)
+      if (match) return match.packet_hash
+    } catch (err) {
+      console.warn('[relayer-api] wallet transfer lookup attempt failed', err)
+    }
+    if (attempt < retries - 1) {
+      await new Promise((r) => setTimeout(r, delayMs))
+    }
+  }
+  return null
+}
 
 export const fetchRelayerHistory = (
   params: RelayerListParams = {}
@@ -129,7 +171,9 @@ export const getRelayerChainName = (chainId: string): string =>
 export const getRelayerTokenSymbol = (token: string): string => {
   const normalized = token.toLowerCase()
   if (normalized === 'ugnot') return 'GNOT'
-  if (normalized.startsWith('0x')) return 'WGNOT'
+  // Wrapped ugnot on the EVM side - shown as plain GNOT since it's the same
+  // underlying asset from the user's perspective.
+  if (normalized.startsWith('0x')) return 'GNOT'
   return token.toUpperCase()
 }
 

@@ -5,7 +5,9 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import {
   getRelayerTransferAmount,
   getRelayerTransferTokenSymbol,
+  getTxExplorerUrl,
   type RelayerTransfer,
+  type RelayerTransferStatus,
 } from 'packages/relayer-api'
 import ChainBadge from './ChainBadge'
 import StatusBadge from './StatusBadge'
@@ -16,6 +18,36 @@ const truncateAddr = (addr: string): string => {
   if (!addr) return '-'
   if (addr.length <= 16) return addr
   return `${addr.slice(0, 8)}…${addr.slice(-6)}`
+}
+
+const TxLink = ({
+  hash,
+  status,
+}: {
+  hash: string
+  status: RelayerTransferStatus
+}): ReactElement => {
+  if (!hash) {
+    // status 3 = Failed - nothing will ever arrive for this leg, so don't
+    // imply it's still on the way.
+    return <>{status === 3 ? '-' : 'AWAITING'}</>
+  }
+  return (
+    <a
+      className="mono text-link"
+      style={{
+        fontSize: 'var(--fs-50)',
+        letterSpacing: '0.04em',
+        textTransform: 'uppercase',
+      }}
+      href={getTxExplorerUrl(hash)}
+      target="_blank"
+      rel="noreferrer"
+      title={hash}
+    >
+      VIEW TX ↗
+    </a>
+  )
 }
 
 const formatTime = (timestamp: string): string => {
@@ -92,6 +124,8 @@ const TransferTable = ({
                 <th>Sender</th>
                 <th>Receiver</th>
                 <th style={{ textAlign: 'center' }}>Status</th>
+                <th>Outbound</th>
+                <th>Inbound</th>
               </tr>
             </thead>
             <tbody>
@@ -128,6 +162,12 @@ const TransferTable = ({
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <StatusBadge status={transfer.status} />
+                  </td>
+                  <td className="mono-cell" style={{ whiteSpace: 'nowrap' }}>
+                    <TxLink hash={transfer.tx_out} status={transfer.status} />
+                  </td>
+                  <td className="mono-cell" style={{ whiteSpace: 'nowrap' }}>
+                    <TxLink hash={transfer.tx_in} status={transfer.status} />
                   </td>
                 </tr>
               ))}

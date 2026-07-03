@@ -26,7 +26,7 @@ export default defineConfig({
         rewrite: (p) => p.replace(/^\/gno-rpc/, ''),
       },
       '/relayer-api': {
-        target: 'http://34.236.55.117:8080',
+        target: 'https://voyager-api.bridge.onbloc.xyz',
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/relayer-api/, ''),
       },

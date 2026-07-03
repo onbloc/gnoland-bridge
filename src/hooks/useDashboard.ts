@@ -9,7 +9,7 @@ import {
   type RelayerTransfer,
 } from 'packages/relayer-api'
 
-export type TokenFilter = 'all' | 'GNOT' | 'WGNOT'
+export type TokenFilter = 'all' | 'GNOT'
 export type RouteFilter = 'all' | 'gno-ethereum' | 'ethereum-gno'
 
 export interface ChartPoint {

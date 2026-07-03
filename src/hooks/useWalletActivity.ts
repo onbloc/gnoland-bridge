@@ -13,6 +13,7 @@ import {
   getRelayerStatusUrl,
   getRelayerTransferAmount,
   getRelayerTransferTokenSymbol,
+  getTxExplorerUrl,
   type RelayerTransfer,
 } from 'packages/relayer-api'
 import AuthStore from 'store/AuthStore'
@@ -51,7 +52,7 @@ const transferMatchesCurrent = ({
   destinationChainId?: string
 }): boolean => {
   if (packetHash && transfer.packet_hash === packetHash) return true
-  if (txHash && transfer.tx_hash === txHash) return true
+  if (txHash && transfer.tx_out === txHash) return true
   if (!senderAddress || !receiverAddress || !amount) return false
   return (
     isSameAddress(transfer.from_address, senderAddress) &&
@@ -81,10 +82,10 @@ const toActivityItem = (
     : dayjs(transfer.created_at).fromNow(),
   fromAddress: transfer.from_address,
   toAddress: transfer.to_address,
-  txHash: transfer.tx_hash,
-  txHref: transfer.tx_hash
-    ? getRelayerStatusUrl(transfer.packet_hash)
-    : undefined,
+  txOutHash: transfer.tx_out,
+  txInHash: transfer.tx_in,
+  txHref: transfer.tx_out ? getTxExplorerUrl(transfer.tx_out) : undefined,
+  txInHref: transfer.tx_in ? getTxExplorerUrl(transfer.tx_in) : undefined,
   href: getRelayerStatusUrl(transfer.packet_hash),
 })
 

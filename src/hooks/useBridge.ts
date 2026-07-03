@@ -289,6 +289,10 @@ export default function useBridge(): UseBridgeReturn {
               account: address as `0x${string}`,
               chain: sepoliaChain,
             })
+
+            // packetHash here is our off-chain estimate; it can drift from
+            // what ZKGM actually commits on-chain. PacketTracker re-resolves
+            // it against the relayer's indexed tx_out once polling starts.
             return {
               success: true,
               hash: txHash,
