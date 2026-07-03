@@ -22,19 +22,35 @@ import useEvmWalletSync from 'hooks/useEvmWalletSync'
 const queryClient = new QueryClient()
 const tanstackQueryClient = new TanstackQueryClient()
 
-const AppBody = (): ReactElement | null => {
-  const [initComplete, setInitComplete] = useState(false)
+// Cap how long we hold the first paint for initApp() (Adena silent restore).
+// Long enough that an already-authorized, unlocked wallet resolves before it
+// fires (avoids a "Connect Adena" flash that immediately flips to
+// connected), short enough that it's not perceptible as a freeze, and far
+// below Adena's own up-to-1s "not installed" poll timeout so that case is
+// never fully blocking either.
+const INIT_GRACE_MS = 500
 
+const AppBody = (): ReactElement | null => {
+  const [ready, setReady] = useState(false)
   const { initApp } = useApp()
   useEvmWalletSync()
 
+  // initApp() keeps running even if the grace window times out first - it
+  // still updates Recoil whenever it actually resolves, same as before.
   useEffect(() => {
-    initApp().then(() => {
-      setInitComplete(true)
+    let cancelled = false
+    const grace = new Promise<void>((resolve) =>
+      setTimeout(resolve, INIT_GRACE_MS)
+    )
+    Promise.race([initApp(), grace]).finally(() => {
+      if (!cancelled) setReady(true)
     })
+    return (): void => {
+      cancelled = true
+    }
   }, [])
 
-  if (!initComplete) return null
+  if (!ready) return null
 
   return (
     <>
