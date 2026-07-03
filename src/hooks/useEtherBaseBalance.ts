@@ -1,13 +1,14 @@
 import { useRecoilValue } from 'recoil'
-import { createPublicClient, custom, erc20Abi, http } from 'viem'
+import { erc20Abi } from 'viem'
 
+import { getEvmPublicClient } from 'config/wagmi'
 import AuthStore from 'store/AuthStore'
 import NetworkStore from 'store/NetworkStore'
 import SendStore from 'store/SendStore'
 
 import { WhiteListType, BalanceListType } from 'types/asset'
 import { isEvmChain } from 'types/network'
-import { pickEvmChain, sepoliaRpcUrl } from 'packages/union/evm-chains'
+import { pickEvmChain } from 'packages/union/evm-chains'
 
 const useEtherBaseBalance = (): {
   getEtherBalances: ({
@@ -31,18 +32,7 @@ const useEtherBaseBalance = (): {
     }
 
     const chain = pickEvmChain(evmNetwork?.chainId)
-    // Sepolia balance reads use an HTTP transport against the configured RPC
-    // even when MetaMask is still on mainnet, so the wugnot row populates
-    // before the user runs the switchChain prompt. Mainnet keeps the
-    // injected provider for parity with the existing flow.
-    const useInjected =
-      !!window.ethereum && chain.id === (evmNetwork?.chainId ?? chain.id)
-    const publicClient = createPublicClient({
-      chain,
-      transport: useInjected
-        ? custom(window.ethereum!)
-        : http(chain.id === 11155111 ? sepoliaRpcUrl() : undefined),
-    })
+    const publicClient = getEvmPublicClient(chain.id)
 
     const list: BalanceListType = {}
     await Promise.all(

@@ -15,7 +15,10 @@ export type GnoWallet = {
 export type EvmWallet = {
   address: string
   walletClient: WalletClient
-  walletType: WalletEnum.MetaMask
+  // Name of the connected EIP-6963 wallet/connector (e.g. "MetaMask", "Rabby",
+  // "Coinbase Wallet") rather than a fixed enum, since any injected wallet
+  // can connect now.
+  walletType: string
 }
 
 // Legacy User type for backward compat during transition

@@ -22,7 +22,7 @@ const Finish = (): ReactElement => {
 
   const walletType = isGnoChain(fromBlockChain)
     ? gnoWallet?.walletType || 'Adena'
-    : evmWallet?.walletType || 'MetaMask'
+    : evmWallet?.walletType || 'EVM wallet'
 
   const asset = useRecoilValue(SendStore.asset)
   const [toAddress, setToAddress] = useRecoilState(SendStore.toAddress)

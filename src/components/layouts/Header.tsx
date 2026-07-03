@@ -1,8 +1,8 @@
 import { ReactElement } from 'react'
 import { useRecoilValue } from 'recoil'
 import { NavLink } from 'react-router-dom'
-import { createWalletClient, custom, type Chain } from 'viem'
-import { mainnet } from 'viem/chains'
+import { useAccount, useDisconnect } from 'wagmi'
+import { ConnectKitButton } from 'connectkit'
 
 import useAuth from 'hooks/useAuth'
 
@@ -14,13 +14,12 @@ import GnoLogo from 'components/GnoLogo'
 import ThemeToggle from 'components/ThemeToggle'
 import { WalletEnum } from 'types/wallet'
 import adenaService, { type AdenaSession } from 'services/adenaService'
-import metaMaskService from 'services/metaMaskService'
 import {
   getBridgeGnoNetwork,
   resolveBridgeNetworkOption,
 } from 'consts/gnoNetworks'
-import { sepoliaChain } from 'packages/union/evm-chains'
 import { TOKEN_INIT_ENABLED } from 'packages/union/gno-zkgm-constants'
+import GenericWalletSvg from 'images/wallet.svg'
 
 const ADENA_SITE_NAME = 'Gno.land Bridge'
 
@@ -28,7 +27,9 @@ const Header = (): ReactElement => {
   const gnoWallet = useRecoilValue(AuthStore.gnoWallet)
   const evmWallet = useRecoilValue(AuthStore.evmWallet)
   const bridgeNetworkMode = useRecoilValue(NetworkStore.bridgeNetworkMode)
-  const { loginGno, loginEvm, disconnectGno, disconnectEvm } = useAuth()
+  const { loginGno, disconnectGno } = useAuth()
+  const { disconnect: disconnectWagmi } = useDisconnect()
+  const { connector: evmConnector } = useAccount()
   const bridgeNetworkOption = resolveBridgeNetworkOption(bridgeNetworkMode)
 
   const connectAdena = async (): Promise<void> => {
@@ -77,38 +78,6 @@ const Header = (): ReactElement => {
     }
   }
 
-  const connectMetaMask = async (): Promise<void> => {
-    if (metaMaskService.checkInstalled()) {
-      const { address, provider } = await metaMaskService.connect()
-      let chain: Chain = mainnet
-
-      if (
-        bridgeNetworkOption.supported &&
-        bridgeNetworkOption.evmChainId === sepoliaChain.id
-      ) {
-        try {
-          await metaMaskService.switchToSepolia()
-          chain = sepoliaChain
-        } catch (e) {
-          console.warn('[metamask] selected network sync failed', e)
-        }
-      }
-
-      const walletClient = createWalletClient({
-        account: address as `0x${string}`,
-        chain,
-        transport: custom(provider),
-      })
-      await loginEvm({
-        address,
-        walletClient,
-        walletType: WalletEnum.MetaMask,
-      })
-    } else {
-      metaMaskService.install()
-    }
-  }
-
   const navLinkCls = ({ isActive }: { isActive: boolean }): string =>
     `b-nav__link${isActive ? ' is-active' : ''}`
 
@@ -139,13 +108,18 @@ const Header = (): ReactElement => {
               onConnect={connectAdena}
               onDisconnect={disconnectGno}
             />
-            <WalletBadge
-              label="Connect MetaMask"
-              walletEnum={WalletEnum.MetaMask}
-              address={evmWallet?.address || null}
-              onConnect={connectMetaMask}
-              onDisconnect={disconnectEvm}
-            />
+            <ConnectKitButton.Custom>
+              {({ show }): ReactElement => (
+                <WalletBadge
+                  label="Connect Wallet"
+                  walletEnum={WalletEnum.MetaMask}
+                  address={evmWallet?.address || null}
+                  onConnect={(): void => show?.()}
+                  onDisconnect={(): void => disconnectWagmi()}
+                  iconSrc={evmConnector?.icon || GenericWalletSvg}
+                />
+              )}
+            </ConnectKitButton.Custom>
           </div>
         </div>
       </div>

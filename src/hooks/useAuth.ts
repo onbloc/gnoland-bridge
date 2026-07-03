@@ -23,7 +23,7 @@ const useAuth = (): {
   getLoginStorage: () => {
     lastFromBlockChain?: BlockChainType
     lastToBlockChain?: BlockChainType
-    lastWalletType?: WalletEnum
+    lastWalletType?: string
   }
   setBlockchainStorage: (props: {
     fromBlockChain: BlockChainType
@@ -57,7 +57,7 @@ const useAuth = (): {
     if (chainId) {
       setEvmNetwork({ chainId, name: 'Ethereum' })
       setEvmWallet(wallet)
-      localStorage.setItem(LocalStorageKey.lastWalletType, WalletEnum.MetaMask)
+      localStorage.setItem(LocalStorageKey.lastWalletType, wallet.walletType)
     } else {
       setIsVisibleNotSupportNetworkModal(true)
     }
@@ -94,7 +94,7 @@ const useAuth = (): {
   const getLoginStorage = (): {
     lastFromBlockChain?: BlockChainType
     lastToBlockChain?: BlockChainType
-    lastWalletType?: WalletEnum
+    lastWalletType?: string
   } => {
     return {
       lastFromBlockChain: (localStorage.getItem(
@@ -103,8 +103,8 @@ const useAuth = (): {
       lastToBlockChain: (localStorage.getItem(
         LocalStorageKey.lastToBlockChain
       ) || undefined) as BlockChainType | undefined,
-      lastWalletType: (localStorage.getItem(LocalStorageKey.lastWalletType) ||
-        undefined) as WalletEnum | undefined,
+      lastWalletType:
+        localStorage.getItem(LocalStorageKey.lastWalletType) || undefined,
     }
   }
 
