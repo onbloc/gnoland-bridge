@@ -10,6 +10,16 @@ import { WalletEnum } from 'types/wallet'
 // accidental re-invocation) doesn't fire two simultaneous unlock prompts.
 let initStarted = false
 
+// Guards against re-entrant onAccountChange runs. Calling AddEstablish for
+// a newly-selected account appears to itself trigger another 'changedAccount'
+// event from Adena, so without this guard the handler below recurses: the
+// second run's establish() shows a duplicate "Connect to Gno.land Bridge"
+// popup, and whichever run finishes last (often the recursive one, which the
+// user never intended to act on) can call disconnectGno() and clobber the
+// session the first run just restored - ending in "nothing connected" even
+// though the user approved the connection.
+let accountChangeInFlight = false
+
 // Shown in the Adena establish popup as the site label.
 const SITE_NAME = 'Gno.land Bridge'
 
@@ -81,19 +91,26 @@ const useApp = (): {
     })
 
     adenaService.onAccountChange(async () => {
-      // The newly selected account may not have authorized this site yet.
-      // Ask Adena to (re-)establish: ALREADY_CONNECTED is silent, otherwise
-      // a single consent popup is shown. Drop to disconnected on rejection.
-      const status = await adenaService.establish(SITE_NAME)
-      if (status === 'rejected') {
-        disconnectGno()
-        return
-      }
-      const r = await adenaService.restore()
-      if (r.kind === 'session') {
-        await applySession(r.session)
-      } else {
-        disconnectGno()
+      if (accountChangeInFlight) return
+      accountChangeInFlight = true
+
+      try {
+        // The newly selected account may not have authorized this site yet.
+        // Ask Adena to (re-)establish: ALREADY_CONNECTED is silent, otherwise
+        // a single consent popup is shown. Drop to disconnected on rejection.
+        const status = await adenaService.establish(SITE_NAME)
+        if (status === 'rejected') {
+          disconnectGno()
+          return
+        }
+        const r = await adenaService.restore()
+        if (r.kind === 'session') {
+          await applySession(r.session)
+        } else {
+          disconnectGno()
+        }
+      } finally {
+        accountChangeInFlight = false
       }
     })
 

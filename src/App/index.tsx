@@ -1,4 +1,4 @@
-import { ReactElement, useEffect, useState } from 'react'
+import { ReactElement, useEffect } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import AppRoutes from '../routes'
 import { QueryClient, QueryClientProvider } from 'react-query'
@@ -14,32 +14,31 @@ import useApp from './useApp'
 const queryClient = new QueryClient()
 
 const App = (): ReactElement => {
-  const [initComplete, setInitComplete] = useState(false)
-
   const { initApp } = useApp()
+
   useEffect(() => {
-    initApp().then(() => {
-      setInitComplete(true)
-    })
+    // Don't gate rendering on this: Adena's restore-on-mount waits on
+    // waitForAdena() (adenaService.ts) to inject window.adena before
+    // concluding it's not installed, which used to blank the whole app for
+    // that long on every load when Adena isn't installed. Run it in the
+    // background instead - Recoil state updates reactively once/if it
+    // resolves.
+    initApp().catch((e) => console.warn('[app] initApp failed', e))
   }, [])
 
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        {initComplete && (
-          <>
-            <div className="min-h-full flex flex-col">
-              <Header />
-              <main className="flex-1">
-                <AppRoutes />
-              </main>
-              <Footer />
-            </div>
-            <SelectWalletModal />
-            <AdenaDownModal />
-            <NetworkErrorScreen />
-          </>
-        )}
+        <div className="min-h-full flex flex-col">
+          <Header />
+          <main className="flex-1">
+            <AppRoutes />
+          </main>
+          <Footer />
+        </div>
+        <SelectWalletModal />
+        <AdenaDownModal />
+        <NetworkErrorScreen />
       </BrowserRouter>
     </QueryClientProvider>
   )
