@@ -2,6 +2,7 @@ import type { PublicClient } from 'viem'
 import { http } from 'viem'
 import { createConfig } from 'wagmi'
 import { mainnet, sepolia } from 'wagmi/chains'
+import { injected } from 'wagmi/connectors'
 import { getPublicClient } from 'wagmi/actions'
 import { getDefaultConfig } from 'connectkit'
 
@@ -10,7 +11,7 @@ import { sepoliaRpcUrl } from 'packages/union/evm-chains'
 // WalletConnect is intentionally out of scope: an empty projectId keeps
 // ConnectKit from registering the WalletConnect connector at all, while
 // injected EIP-6963 discovery (multiInjectedProviderDiscovery, on by
-// default) and Coinbase Wallet still work.
+// default) still works.
 export const wagmiConfig = createConfig(
   getDefaultConfig({
     appName: 'Gno.land Bridge',
@@ -23,9 +24,14 @@ export const wagmiConfig = createConfig(
       [mainnet.id]: http(),
       [sepolia.id]: http(sepoliaRpcUrl()),
     },
-    // Hides the "Continue with Aave" (formerly "Family") entry that
-    // ConnectKit otherwise pins to the top of the wallet list.
-    enableAaveAccount: false,
+    // Only MetaMask is pinned (ConnectKit's own default also pins Coinbase
+    // Wallet, which tries a hosted popup connection when the extension
+    // isn't installed and just hangs). Keeping one fixed connector means
+    // the wallet list is never empty, so ConnectKit never falls into its
+    // "No connectors found in ConnectKit config." empty state at all -
+    // everything else (Rabby, Keplr, etc.) still shows up automatically via
+    // multiInjectedProviderDiscovery when actually installed.
+    connectors: [injected({ target: 'metaMask' })],
   })
 )
 

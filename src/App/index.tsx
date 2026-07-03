@@ -56,7 +56,15 @@ const App = (): ReactElement => {
   return (
     <WagmiProvider config={wagmiConfig}>
       <TanstackQueryClientProvider client={tanstackQueryClient}>
-        <ConnectKitProvider>
+        <ConnectKitProvider
+          customTheme={{
+            // Tones ConnectKit's "danger" accent (error headings, warning
+            // badges, the empty-connector-list alert) down to the app's own
+            // muted text color instead of a bright red, and tracks light/
+            // dark mode automatically since --text-secondary already does.
+            '--ck-body-color-danger': 'var(--text-secondary)',
+          }}
+        >
           <QueryClientProvider client={queryClient}>
             <BrowserRouter>
               <AppBody />

@@ -32,7 +32,7 @@ export class AdenaConnectionError extends Error {
   }
 }
 
-const ADENA_APP_URL = 'https://www.adena.app/'
+const ADENA_APP_URL = 'https://www.adena.app/#download'
 
 const checkInstalled = (): boolean => {
   return typeof window !== 'undefined' && !!window.adena
