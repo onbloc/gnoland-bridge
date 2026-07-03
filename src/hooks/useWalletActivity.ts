@@ -13,6 +13,7 @@ import {
   getRelayerStatusUrl,
   getRelayerTransferAmount,
   getRelayerTransferTokenSymbol,
+  getTxExplorerUrl,
   type RelayerTransfer,
 } from 'packages/relayer-api'
 import AuthStore from 'store/AuthStore'
@@ -83,9 +84,8 @@ const toActivityItem = (
   toAddress: transfer.to_address,
   txOutHash: transfer.tx_out,
   txInHash: transfer.tx_in,
-  txHref: transfer.tx_out
-    ? getRelayerStatusUrl(transfer.packet_hash)
-    : undefined,
+  txHref: transfer.tx_out ? getTxExplorerUrl(transfer.tx_out) : undefined,
+  txInHref: transfer.tx_in ? getTxExplorerUrl(transfer.tx_in) : undefined,
   href: getRelayerStatusUrl(transfer.packet_hash),
 })
 

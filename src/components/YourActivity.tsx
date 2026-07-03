@@ -20,6 +20,7 @@ export interface ActivityItem {
   txOutHash?: string
   txInHash?: string
   txHref?: string
+  txInHref?: string
   href?: string
 }
 
@@ -116,7 +117,15 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
           ? 'FAILED'
           : 'IN PROGRESS',
     },
-    { label: 'Received', sub: item.stage === 2 ? 'COMPLETE' : 'AWAITING' },
+    {
+      label: 'Received',
+      sub:
+        item.stage === 2
+          ? item.txInHref
+            ? 'VIEW TX'
+            : 'COMPLETE'
+          : 'AWAITING',
+    },
   ]
 
   return (
@@ -145,6 +154,8 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
               : state === 'active' || state === 'done'
               ? 'progress-step__sub progress-step__sub--brand'
               : 'progress-step__sub progress-step__sub--muted'
+          const stepHref =
+            index === 0 ? item.txHref : index === 2 ? item.txInHref : undefined
 
           return (
             <div key={step.label} className={cls}>
@@ -178,10 +189,10 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
                 )}
               </div>
               <span className="progress-step__label">{step.label}</span>
-              {index === 0 && item.txHref ? (
+              {stepHref ? (
                 <a
                   className={subCls}
-                  href={item.txHref}
+                  href={stepHref}
                   target="_blank"
                   rel="noreferrer"
                 >
