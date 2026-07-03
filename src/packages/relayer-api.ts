@@ -99,7 +99,11 @@ export const fetchWalletTransfers = (
   params: RelayerListParams = {}
 ): Promise<RelayerListResponse> =>
   fetchJson<RelayerListResponse>(
-    buildUrl(`/wallet/${encodeURIComponent(address)}`, {
+    // The relayer backend matches EVM addresses as exact (case-sensitive)
+    // strings, lowercase only. wagmi/viem always return EIP-55 checksummed
+    // (mixed-case) addresses, so an unmodified lookup silently 404s/empties.
+    // Gno bech32 addresses are already lowercase, so this is a no-op for them.
+    buildUrl(`/wallet/${encodeURIComponent(address.toLowerCase())}`, {
       orderby: params.orderby ?? 'desc',
       limit: params.limit ?? 20,
       offset: params.offset ?? 0,
