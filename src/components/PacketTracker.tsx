@@ -1,6 +1,7 @@
 import { ReactElement, useEffect, useState, useRef } from 'react'
 import {
   fetchRelayerStatus,
+  getTxExplorerUrl,
   isRelayerTransferTerminal,
   type RelayerTransfer,
 } from 'packages/relayer-api'
@@ -11,10 +12,12 @@ function StepSubtext({
   stepIndex,
   completedStep,
   sourceTxUrl,
+  destTxUrl,
 }: {
   stepIndex: number
   completedStep: number
   sourceTxUrl?: string
+  destTxUrl?: string
 }): ReactElement {
   if (stepIndex === 0 && completedStep >= 0 && sourceTxUrl) {
     return (
@@ -33,6 +36,18 @@ function StepSubtext({
       <span className="progress-step__sub progress-step__sub--muted">
         Complete
       </span>
+    )
+  }
+  if (stepIndex === 2 && completedStep >= 2 && destTxUrl) {
+    return (
+      <a
+        href={destTxUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="progress-step__sub progress-step__sub--brand"
+      >
+        View Tx ↗
+      </a>
     )
   }
   return <></>
@@ -74,6 +89,8 @@ export default function PacketTracker({
   }, [packetHash])
 
   if (!packetHash) return <></>
+
+  const destTxUrl = transfer?.tx_in ? getTxExplorerUrl(transfer.tx_in) : undefined
 
   const failed = transfer?.status === 3
   const completedStep =
@@ -141,6 +158,7 @@ export default function PacketTracker({
                   stepIndex={i}
                   completedStep={completedStep}
                   sourceTxUrl={sourceTxUrl}
+                  destTxUrl={destTxUrl}
                 />
               </div>
             )
