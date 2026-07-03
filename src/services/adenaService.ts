@@ -51,7 +51,10 @@ export type AdenaSession = {
 // first useEffect isn't guaranteed. Adena does not dispatch a ready event
 // (no EIP-6963, no custom event), so we poll until the global appears and
 // reject if it never does within timeoutMs (extension not installed).
-const waitForAdena = (timeoutMs = 3000): Promise<void> =>
+// Kept short: callers no longer block app render on this, but a shorter
+// timeout still means a snappier "not installed" fallback everywhere else
+// (establish/ensureNetwork/etc. during boot's account-change wiring).
+const waitForAdena = (timeoutMs = 1000): Promise<void> =>
   new Promise((resolve, reject) => {
     if (checkInstalled()) {
       resolve()
@@ -68,7 +71,7 @@ const waitForAdena = (timeoutMs = 3000): Promise<void> =>
         clearInterval(id)
         reject(new Error('adena-not-installed'))
       }
-    }, 50)
+    }, 10)
   })
 
 const requireAdena = async (): Promise<void> => {
