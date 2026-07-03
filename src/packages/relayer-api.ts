@@ -5,7 +5,7 @@ export const RELAYER_API_BASE_URL = (
 ).replace(/\/$/, '')
 
 export const RELAYER_CHAIN_IDS = {
-  gnoland: 'dev',
+  gnoland: 'dev.ibc',
   ethereum: '11155111',
 } as const
 
@@ -109,6 +109,32 @@ export const fetchWalletTransfers = (
       offset: params.offset ?? 0,
     })
   )
+
+// Mirrors fetchPacketHashFromTx (gno ABCI lookup) for the EVM side. The
+// client-side estimate computed in eth-gno-zkgm.ts can drift from the packet
+// hash the ZKGM contract actually commits on-chain, so once the relayer has
+// indexed the submission tx we prefer its packet_hash over our own guess.
+// Used by PacketTracker to re-resolve a stuck/mismatched estimate mid-poll.
+export const fetchPacketHashByTxHash = async (
+  address: string,
+  txHash: string,
+  retries = 6,
+  delayMs = 800
+): Promise<string | null> => {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
+    try {
+      const { data } = await fetchWalletTransfers(address, { limit: 5 })
+      const match = data.find((transfer) => transfer.tx_out === txHash)
+      if (match) return match.packet_hash
+    } catch (err) {
+      console.warn('[relayer-api] wallet transfer lookup attempt failed', err)
+    }
+    if (attempt < retries - 1) {
+      await new Promise((r) => setTimeout(r, delayMs))
+    }
+  }
+  return null
+}
 
 export const fetchRelayerHistory = (
   params: RelayerListParams = {}

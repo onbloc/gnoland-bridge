@@ -1,5 +1,6 @@
 import { ReactElement, useEffect, useState, useRef } from 'react'
 import {
+  fetchPacketHashByTxHash,
   fetchRelayerStatus,
   getTxExplorerUrl,
   isRelayerTransferTerminal,
@@ -19,7 +20,7 @@ function StepSubtext({
   sourceTxUrl?: string
   destTxUrl?: string
 }): ReactElement {
-  if (stepIndex === 0 && completedStep >= 0 && sourceTxUrl) {
+  if (stepIndex === 0 && sourceTxUrl) {
     return (
       <a
         href={sourceTxUrl}
@@ -56,20 +57,30 @@ function StepSubtext({
 export default function PacketTracker({
   packetHash,
   sourceTxUrl,
+  senderAddress,
+  sourceTxHash,
 }: {
   packetHash: string
   sourceTxUrl?: string
+  // packetHash may be a client-side estimate that drifts from what the chain
+  // actually commits (see fetchPacketHashByTxHash). When present, these let
+  // the poll loop below re-resolve the real hash from the indexed source tx.
+  senderAddress?: string
+  sourceTxHash?: string
 }): ReactElement {
+  const [correctedHash, setCorrectedHash] = useState<string | null>(null)
   const [transfer, setTransfer] = useState<RelayerTransfer | null>(null)
   const [error, setError] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval>>()
 
+  const resolvedPacketHash = correctedHash ?? packetHash
+
   useEffect(() => {
-    if (!packetHash) return
+    if (!resolvedPacketHash) return
 
     const poll = async (): Promise<void> => {
       try {
-        const result = await fetchRelayerStatus(packetHash)
+        const result = await fetchRelayerStatus(resolvedPacketHash)
         setTransfer(result)
         setError(null)
         if (isRelayerTransferTerminal(result)) {
@@ -77,8 +88,24 @@ export default function PacketTracker({
         }
       } catch (e) {
         // The relayer backend 404s until it has indexed this packet - that's
-        // expected right after the tx lands, so keep polling silently.
-        if (e instanceof Error && /404/.test(e.message)) return
+        // expected right after the tx lands, so keep polling silently. Our
+        // off-chain packetHash estimate can also just be wrong (drift from
+        // what the chain actually commits) - if so it will 404 forever, so
+        // try resolving the real hash from the indexed source tx instead.
+        if (e instanceof Error && /404/.test(e.message)) {
+          if (senderAddress && sourceTxHash) {
+            const indexedHash = await fetchPacketHashByTxHash(
+              senderAddress,
+              sourceTxHash,
+              1,
+              0
+            ).catch(() => null)
+            if (indexedHash && indexedHash !== resolvedPacketHash) {
+              setCorrectedHash(indexedHash)
+            }
+          }
+          return
+        }
         setError(e instanceof Error ? e.message : 'Failed to query transfer')
       }
     }
@@ -86,7 +113,7 @@ export default function PacketTracker({
     poll()
     intervalRef.current = setInterval(poll, 5_000)
     return (): void => clearInterval(intervalRef.current)
-  }, [packetHash])
+  }, [resolvedPacketHash, senderAddress, sourceTxHash])
 
   if (!packetHash) return <></>
 
@@ -164,19 +191,6 @@ export default function PacketTracker({
             )
           })}
         </div>
-      </div>
-
-      <div
-        style={{
-          fontFamily: 'var(--font-mono)',
-          fontSize: 'var(--fs-50)',
-          color: 'var(--text-tertiary)',
-          letterSpacing: 0,
-          wordBreak: 'break-all',
-          marginTop: 'var(--space-2)',
-        }}
-      >
-        {packetHash}
       </div>
     </div>
   )
