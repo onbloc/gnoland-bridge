@@ -17,7 +17,8 @@ export interface ActivityItem {
   timeLabel: string
   fromAddress: string
   toAddress: string
-  txHash?: string
+  txOutHash?: string
+  txInHash?: string
   txHref?: string
   href?: string
 }

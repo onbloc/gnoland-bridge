@@ -33,7 +33,8 @@ export interface RelayerTransfer {
   quote_token: string
   quote_amount: string
   height: number
-  tx_hash: string
+  tx_out: string
+  tx_in: string
   timeout_timestamp: number
   status: RelayerTransferStatus
   created_at: string

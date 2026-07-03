@@ -51,7 +51,7 @@ const transferMatchesCurrent = ({
   destinationChainId?: string
 }): boolean => {
   if (packetHash && transfer.packet_hash === packetHash) return true
-  if (txHash && transfer.tx_hash === txHash) return true
+  if (txHash && transfer.tx_out === txHash) return true
   if (!senderAddress || !receiverAddress || !amount) return false
   return (
     isSameAddress(transfer.from_address, senderAddress) &&
@@ -81,8 +81,9 @@ const toActivityItem = (
     : dayjs(transfer.created_at).fromNow(),
   fromAddress: transfer.from_address,
   toAddress: transfer.to_address,
-  txHash: transfer.tx_hash,
-  txHref: transfer.tx_hash
+  txOutHash: transfer.tx_out,
+  txInHash: transfer.tx_in,
+  txHref: transfer.tx_out
     ? getRelayerStatusUrl(transfer.packet_hash)
     : undefined,
   href: getRelayerStatusUrl(transfer.packet_hash),
