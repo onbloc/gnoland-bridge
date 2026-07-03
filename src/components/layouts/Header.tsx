@@ -19,7 +19,7 @@ import {
   resolveBridgeNetworkOption,
 } from 'consts/gnoNetworks'
 import { TOKEN_INIT_ENABLED } from 'packages/union/gno-zkgm-constants'
-import GenericWalletSvg from 'images/wallet.svg'
+import EthereumSvg from 'images/ethereum.svg'
 
 const ADENA_SITE_NAME = 'Gno.land Bridge'
 
@@ -111,12 +111,12 @@ const Header = (): ReactElement => {
             <ConnectKitButton.Custom>
               {({ show }): ReactElement => (
                 <WalletBadge
-                  label="Connect Wallet"
+                  label="Connect EVM Wallet"
                   walletEnum={WalletEnum.MetaMask}
                   address={evmWallet?.address || null}
                   onConnect={(): void => show?.()}
                   onDisconnect={(): void => disconnectWagmi()}
-                  iconSrc={evmConnector?.icon || GenericWalletSvg}
+                  iconSrc={evmConnector?.icon || EthereumSvg}
                 />
               )}
             </ConnectKitButton.Custom>
