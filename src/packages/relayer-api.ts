@@ -171,7 +171,9 @@ export const getRelayerChainName = (chainId: string): string =>
 export const getRelayerTokenSymbol = (token: string): string => {
   const normalized = token.toLowerCase()
   if (normalized === 'ugnot') return 'GNOT'
-  if (normalized.startsWith('0x')) return 'WGNOT'
+  // Wrapped ugnot on the EVM side - shown as plain GNOT since it's the same
+  // underlying asset from the user's perspective.
+  if (normalized.startsWith('0x')) return 'GNOT'
   return token.toUpperCase()
 }
 
