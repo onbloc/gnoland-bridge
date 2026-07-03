@@ -1,13 +1,12 @@
-import { ReactElement, useEffect } from 'react'
+import { ReactElement, useEffect, useRef } from 'react'
 import { useRecoilValue, useSetRecoilState } from 'recoil'
-import { createWalletClient, custom } from 'viem'
-import { mainnet } from 'viem/chains'
+import { useAccount } from 'wagmi'
+import { useModal } from 'connectkit'
 
 import SendStore from 'store/SendStore'
 import { isGnoChain, isEvmChain } from 'types/network'
 import { WalletEnum } from 'types/wallet'
 import adenaService from 'services/adenaService'
-import metaMaskService from 'services/metaMaskService'
 import useAuth from 'hooks/useAuth'
 
 const isBrowser = typeof window !== 'undefined'
@@ -32,56 +31,39 @@ const linkBtnStyle: React.CSSProperties = {
 export default function AutoFillButton(): ReactElement {
   const toBlockChain = useRecoilValue(SendStore.toBlockChain)
   const setToAddress = useSetRecoilState(SendStore.toAddress)
-  const { loginEvm, loginGno } = useAuth()
+  const { loginGno } = useAuth()
+  const { setOpen } = useModal()
+  const { address, isConnected } = useAccount()
+  // Set when the user clicks "Use my wallet" while disconnected, so the
+  // effect below knows to fill toAddress once ConnectKit finishes connecting.
+  const awaitingEvmFill = useRef(false)
 
   useEffect(() => {
     setToAddress('')
   }, [toBlockChain])
 
+  useEffect(() => {
+    if (awaitingEvmFill.current && isConnected && address) {
+      setToAddress(address)
+      awaitingEvmFill.current = false
+    }
+  }, [isConnected, address, setToAddress])
+
   if (isEvmChain(toBlockChain)) {
     if (!(isBrowser && (isChrome || isEdgeChromium))) {
       return <></>
-    }
-    if (!metaMaskService.checkInstalled()) {
-      return (
-        <a
-          className="text-link"
-          href="https://metamask.io/download/"
-          target="_blank"
-          rel="noreferrer"
-          style={{
-            ...linkBtnStyle,
-            color: 'var(--text-link)',
-            textDecoration: 'none',
-          }}
-        >
-          Install MetaMask
-        </a>
-      )
     }
     return (
       <button
         type="button"
         style={linkBtnStyle}
-        onClick={async (): Promise<void> => {
-          if (!metaMaskService.checkInstalled()) return
-          try {
-            const { address, provider } = await metaMaskService.connect()
-            if (!address) return
-            const walletClient = createWalletClient({
-              account: address as `0x${string}`,
-              chain: mainnet,
-              transport: custom(provider),
-            })
-            await loginEvm({
-              address,
-              walletClient,
-              walletType: WalletEnum.MetaMask,
-            })
+        onClick={(): void => {
+          if (isConnected && address) {
             setToAddress(address)
-          } catch (e) {
-            console.info('[metamask] use-my-wallet aborted', e)
+            return
           }
+          awaitingEvmFill.current = true
+          setOpen(true)
         }}
       >
         Use my wallet

@@ -1,7 +1,6 @@
 import { ReactElement, useEffect, useMemo, useRef, useState } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
-import { createWalletClient, custom } from 'viem'
-import { mainnet } from 'viem/chains'
+import { useSwitchChain } from 'wagmi'
 
 import useAuth from 'hooks/useAuth'
 
@@ -14,10 +13,7 @@ import {
   resolveBridgeNetworkOption,
   type BridgeNetworkOption,
 } from 'consts/gnoNetworks'
-import { sepoliaChain } from 'packages/union/evm-chains'
 import adenaService from 'services/adenaService'
-import metaMaskService from 'services/metaMaskService'
-import { BlockChainType } from 'types/network'
 import { WalletEnum } from 'types/wallet'
 
 const ADENA_SITE_NAME = 'Gno.land Bridge'
@@ -33,7 +29,8 @@ const NetworkSelector = (): ReactElement => {
   const gnoWallet = useRecoilValue(AuthStore.gnoWallet)
   const evmWallet = useRecoilValue(AuthStore.evmWallet)
   const evmNetwork = useRecoilValue(NetworkStore.evmNetwork)
-  const { loginGno, loginEvm } = useAuth()
+  const { loginGno } = useAuth()
+  const { switchChainAsync } = useSwitchChain()
 
   const selectedOption = useMemo(
     () => resolveBridgeNetworkOption(bridgeNetworkMode),
@@ -79,25 +76,6 @@ const NetworkSelector = (): ReactElement => {
     return true
   }
 
-  const refreshEvmSession = async (
-    option: BridgeNetworkOption
-  ): Promise<void> => {
-    if (!evmWallet?.address || !window.ethereum) return
-
-    const chain = option.evmChainId === sepoliaChain.id ? sepoliaChain : mainnet
-    const walletClient = createWalletClient({
-      account: evmWallet.address as `0x${string}`,
-      chain,
-      transport: custom(window.ethereum),
-    })
-
-    await loginEvm({
-      address: evmWallet.address,
-      walletClient,
-      walletType: WalletEnum.MetaMask,
-    })
-  }
-
   const syncWalletNetworks = async (
     option: BridgeNetworkOption
   ): Promise<void> => {
@@ -115,13 +93,10 @@ const NetworkSelector = (): ReactElement => {
       await refreshGnoSession()
     }
 
-    if (evmWallet && metaMaskService.checkInstalled()) {
-      if (option.evmChainId === sepoliaChain.id) {
-        await metaMaskService.switchToSepolia()
-      } else {
-        await metaMaskService.switchNetwork(BlockChainType.ethereum)
-      }
-      await refreshEvmSession(option)
+    // useEvmWalletSync mirrors the resulting chainChanged event back into
+    // Recoil, so there's no manual wallet-client refresh needed here.
+    if (evmWallet) {
+      await switchChainAsync({ chainId: option.evmChainId })
     }
   }
 

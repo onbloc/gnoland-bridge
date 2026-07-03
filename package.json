@@ -14,12 +14,14 @@
     "@effect/experimental": "^0.60.0",
     "@effect/platform": "^0.96.0",
     "@safe-global/safe-apps-sdk": "^9.1.0",
+    "@tanstack/react-query": "^5.101.2",
     "@unionlabs/sdk": "^2.0.0-beta.2",
     "@unionlabs/sdk-cosmos": "^0.0.0-beta.0",
     "@unionlabs/sdk-evm": "^0.0.4",
     "axios": "^1.15.0",
     "bech32": "^1.1.4",
     "bignumber.js": "^9.0.1",
+    "connectkit": "^1.9.2",
     "cosmjs-types": "^0.11.0",
     "dayjs": "^1.11.20",
     "effect": "^3.21.0",
@@ -32,7 +34,8 @@
     "react-use-clipboard": "^1.0.7",
     "recoil": "^0.7.7",
     "use-debounce": "^9.0.4",
-    "viem": "^2.47.11"
+    "viem": "^2.47.11",
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.11.8",
