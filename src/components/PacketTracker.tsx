@@ -1,13 +1,9 @@
 import { ReactElement, useEffect, useState, useRef } from 'react'
-import type { PacketDetails } from 'packages/union/graphql'
-
-// Maps Union GraphQL status to the highest completed step index (0=Sent, 1=Relayed, 2=Received)
-const STATUS_TO_STEP: Record<string, number> = {
-  PACKET_SEND: 0,
-  PACKET_RECV: 1,
-  WRITE_ACK: 1,
-  PACKET_ACK: 2,
-}
+import {
+  fetchRelayerStatus,
+  isRelayerTransferTerminal,
+  type RelayerTransfer,
+} from 'packages/relayer-api'
 
 const STEP_LABELS = ['Sent', 'Relayed', 'Received']
 
@@ -49,7 +45,7 @@ export default function PacketTracker({
   packetHash: string
   sourceTxUrl?: string
 }): ReactElement {
-  const [packet, setPacket] = useState<PacketDetails | null>(null)
+  const [transfer, setTransfer] = useState<RelayerTransfer | null>(null)
   const [error, setError] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval>>()
 
@@ -58,45 +54,36 @@ export default function PacketTracker({
 
     const poll = async (): Promise<void> => {
       try {
-        const res = await fetch('https://graphql.union.build/v1/graphql', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `query($h: String!) @cached(ttl:15) {
-              v2_packets(args:{p_packet_hash:$h}) {
-                packet_hash status
-                packet_send_transaction_hash
-                packet_recv_transaction_hash
-                packet_ack_transaction_hash
-                source_universal_chain_id
-                destination_universal_chain_id
-                traces { type height timestamp transaction_hash chain { universal_chain_id } }
-              }
-            }`,
-            variables: { h: packetHash },
-          }),
-        })
-        const json = await res.json()
-        const packets = json?.data?.v2_packets
-        if (packets && packets.length > 0) {
-          setPacket(packets[0])
-          if (packets[0].status === 'PACKET_ACK') {
-            clearInterval(intervalRef.current)
-          }
+        const result = await fetchRelayerStatus(packetHash)
+        setTransfer(result)
+        setError(null)
+        if (isRelayerTransferTerminal(result)) {
+          clearInterval(intervalRef.current)
         }
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to query packet')
+        // The relayer backend 404s until it has indexed this packet - that's
+        // expected right after the tx lands, so keep polling silently.
+        if (e instanceof Error && /404/.test(e.message)) return
+        setError(e instanceof Error ? e.message : 'Failed to query transfer')
       }
     }
 
     poll()
-    intervalRef.current = setInterval(poll, 10_000)
+    intervalRef.current = setInterval(poll, 5_000)
     return (): void => clearInterval(intervalRef.current)
   }, [packetHash])
 
   if (!packetHash) return <></>
 
-  const completedStep = packet ? STATUS_TO_STEP[packet.status] ?? -1 : -1
+  const failed = transfer?.status === 3
+  const completedStep =
+    transfer?.status === 2
+      ? 2
+      : transfer?.status === 1
+      ? 1
+      : transfer?.status === 0
+      ? 0
+      : -1
 
   // Line fill: 0% when nothing done, 50% after step 1, 100% when all done
   const lineFillPct =
@@ -104,7 +91,7 @@ export default function PacketTracker({
 
   return (
     <div>
-      {error && (
+      {(error || failed) && (
         <div
           style={{
             fontSize: 'var(--fs-50)',
@@ -112,7 +99,7 @@ export default function PacketTracker({
             marginBottom: 'var(--space-2)',
           }}
         >
-          {error}
+          {error || transfer?.err_msg || 'Transfer failed'}
         </div>
       )}
 
