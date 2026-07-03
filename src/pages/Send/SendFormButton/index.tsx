@@ -30,7 +30,7 @@ const SendFormButton = ({
     )
   }
 
-  const walletName = isGnoChain(fromBlockChain) ? 'Adena' : 'MetaMask'
+  const walletName = isGnoChain(fromBlockChain) ? 'Adena' : 'an EVM'
 
   return <Button disabled>Connect {walletName} wallet to continue</Button>
 }

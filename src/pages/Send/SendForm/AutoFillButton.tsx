@@ -40,14 +40,22 @@ export default function AutoFillButton(): ReactElement {
 
   useEffect(() => {
     setToAddress('')
+    // Destination changed - drop any pending "fill once connected" request
+    // so a later, unrelated EVM connect doesn't fill a Gno address field.
+    awaitingEvmFill.current = false
   }, [toBlockChain])
 
   useEffect(() => {
-    if (awaitingEvmFill.current && isConnected && address) {
+    if (
+      awaitingEvmFill.current &&
+      isEvmChain(toBlockChain) &&
+      isConnected &&
+      address
+    ) {
       setToAddress(address)
       awaitingEvmFill.current = false
     }
-  }, [isConnected, address, setToAddress])
+  }, [isConnected, address, toBlockChain, setToAddress])
 
   if (isEvmChain(toBlockChain)) {
     if (!(isBrowser && (isChrome || isEdgeChromium))) {

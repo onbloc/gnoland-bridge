@@ -215,7 +215,7 @@ export default function useBridge(): UseBridgeReturn {
           const walletClient = evmWallet?.walletClient
           const address = evmWallet?.address
           if (!walletClient || !address) {
-            return { success: false, errorMessage: 'MetaMask not connected' }
+            return { success: false, errorMessage: 'EVM wallet not connected' }
           }
 
           // gno-direct UNESCROW path (EVM -> Gno). The wrapped ugnot ERC20
@@ -242,7 +242,7 @@ export default function useBridge(): UseBridgeReturn {
                 const m = err instanceof Error ? err.message : 'switch failed'
                 return {
                   success: false,
-                  errorMessage: `Switch MetaMask to Sepolia (chainId 0xaa36a7) and retry. ${m}`,
+                  errorMessage: `Switch your wallet to Sepolia (chainId 0xaa36a7) and retry. ${m}`,
                 }
               }
             }
