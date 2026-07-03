@@ -83,6 +83,17 @@ const fetchJson = async <T>(url: string): Promise<T> => {
 export const getRelayerStatusUrl = (packetHash: string): string =>
   buildUrl(`/status/${encodeURIComponent(packetHash)}`)
 
+// Outbound legs (EVM chains) use 0x-prefixed hashes -> Etherscan. Everything
+// else is a Gno-side tx hash -> the gnoscan build pointed at the dev.ibc RPC.
+const SEPOLIA_EXPLORER_TX_URL = 'https://sepolia.etherscan.io/tx/'
+const GNOSCAN_TX_URL =
+  'https://gnoscan-git-feature-gns-372-onbloc.vercel.app/transactions/details?type=custom&rpcUrl=http://23.20.153.250:26657/&indexerUrl=&txhash='
+
+export const getTxExplorerUrl = (hash: string): string =>
+  hash.startsWith('0x')
+    ? `${SEPOLIA_EXPLORER_TX_URL}${encodeURIComponent(hash)}`
+    : `${GNOSCAN_TX_URL}${encodeURIComponent(hash)}`
+
 export const fetchWalletTransfers = (
   address: string,
   params: RelayerListParams = {}
