@@ -29,9 +29,11 @@ const formatDate = (dateStr: string): string => {
 const TransferChart = ({
   data,
   loading = false,
+  windowSize,
 }: {
   data: ChartPoint[]
   loading?: boolean
+  windowSize?: number
 }): ReactElement => {
   const maxValue = useMemo(
     () => (data.length ? Math.max(...data.map((d) => d.total), 1) : 1),
@@ -63,7 +65,9 @@ const TransferChart = ({
       <div className="card__header">
         <div>
           <div className="card__title">Loaded transfer volume</div>
-          <div className="card__sub">Current history page only</div>
+          <div className="card__sub">
+            {windowSize ? `Last ${windowSize} transfers` : 'Recent transfers'}
+          </div>
         </div>
       </div>
       <div style={{ padding: 'var(--space-6)' }}>

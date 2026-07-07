@@ -21,6 +21,7 @@ export interface ChartPoint {
 }
 
 const PAGE_SIZE = 20
+const CHART_LIMIT = 100
 
 const formatDateKey = (timestamp: string): string =>
   timestamp ? timestamp.slice(0, 10) : 'Unknown'
@@ -74,24 +75,45 @@ export function useDashboard() {
     { staleTime: 10_000, refetchInterval: 10_000 }
   )
 
+  // Independent of table pagination, so the chart always reflects a
+  // consistent recent window instead of reshuffling to whichever page the
+  // table happens to be on.
+  const chartQuery = useQuery(
+    ['dashboard-chart'],
+    () => fetchRelayerHistory({ limit: CHART_LIMIT, offset: 0, orderby: 'desc' }),
+    { staleTime: 10_000, refetchInterval: 10_000 }
+  )
+
   const summaryQuery = useQuery(
     ['dashboard-summary'],
     () => fetchRelayerSummary(),
     { staleTime: 30_000, refetchInterval: 30_000 }
   )
 
-  const pageTransfers = transfersQuery.data?.data ?? []
-
-  const filteredTransfers = useMemo<RelayerTransfer[]>(() => {
-    return pageTransfers.filter((transfer) => {
+  const matchesFilters = useCallback(
+    (transfer: RelayerTransfer): boolean => {
       const tokenMatches =
         tokenFilter === 'all' ||
         getRelayerTransferTokenSymbol(transfer) === tokenFilter
       const routeMatches =
         routeFilter === 'all' || getRelayerRouteKey(transfer) === routeFilter
       return tokenMatches && routeMatches
-    })
-  }, [pageTransfers, routeFilter, tokenFilter])
+    },
+    [routeFilter, tokenFilter]
+  )
+
+  const pageTransfers = transfersQuery.data?.data ?? []
+  const chartTransfers = chartQuery.data?.data ?? []
+
+  const filteredTransfers = useMemo<RelayerTransfer[]>(
+    () => pageTransfers.filter(matchesFilters),
+    [pageTransfers, matchesFilters]
+  )
+
+  const filteredChartTransfers = useMemo<RelayerTransfer[]>(
+    () => chartTransfers.filter(matchesFilters),
+    [chartTransfers, matchesFilters]
+  )
 
   const successRate = useMemo(() => {
     if (pageTransfers.length === 0) return null
@@ -110,8 +132,8 @@ export function useDashboard() {
   )
 
   const chartData = useMemo<ChartPoint[]>(
-    () => aggregateChartData(filteredTransfers),
-    [filteredTransfers]
+    () => aggregateChartData(filteredChartTransfers),
+    [filteredChartTransfers]
   )
 
   const totalTransfers = summaryQuery.data?.total ?? 0
@@ -135,6 +157,9 @@ export function useDashboard() {
     summaryLoading: summaryQuery.isLoading,
     summaryError: summaryQuery.error as Error | null,
     chartData,
+    chartLoading: chartQuery.isLoading,
+    chartError: chartQuery.error as Error | null,
+    chartWindowSize: CHART_LIMIT,
     totalTransfers,
     successRate,
     processingCount,
