@@ -44,10 +44,25 @@ function aggregateChartData(transfers: RelayerTransfer[]): ChartPoint[] {
     const amount = getRelayerTransferAmountValue(transfer)
     if (!Number.isFinite(amount)) continue
 
-    point.total += amount
     const route = getRelayerRouteKey(transfer)
-    if (route === 'gno-ethereum') point.gnoToEth += amount
-    if (route === 'ethereum-gno') point.ethToGno += amount
+    if (route === 'gno-ethereum') {
+      point.gnoToEth += amount
+      point.total += amount
+    } else if (route === 'ethereum-gno') {
+      point.ethToGno += amount
+      point.total += amount
+    } else {
+      // Only gno-land<->ethereum is configured (RELAYER_CHAIN_IDS), so this
+      // signals a chain-id config drift or bad backend data rather than a
+      // real route — exclude it from the chart's scale instead of silently
+      // inflating the axis with a value that's never drawn.
+      console.warn(
+        '[useDashboard] transfer with unrecognized chain route excluded from chart',
+        transfer.packet_hash,
+        transfer.src_chain_id,
+        transfer.dst_chain_id
+      )
+    }
   }
 
   return Array.from(byDate.values()).sort((a, b) =>
