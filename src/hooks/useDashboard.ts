@@ -5,6 +5,7 @@ import {
   fetchRelayerHistory,
   fetchRelayerSummary,
   getRelayerRouteKey,
+  getRelayerTransferAmountValue,
   getRelayerTransferTokenSymbol,
   type RelayerTransfer,
 } from 'packages/relayer-api'
@@ -39,10 +40,13 @@ function aggregateChartData(transfers: RelayerTransfer[]): ChartPoint[] {
     }
 
     const point = byDate.get(date)!
-    point.total += 1
+    const amount = getRelayerTransferAmountValue(transfer)
+    if (!Number.isFinite(amount)) continue
+
+    point.total += amount
     const route = getRelayerRouteKey(transfer)
-    if (route === 'gno-ethereum') point.gnoToEth += 1
-    if (route === 'ethereum-gno') point.ethToGno += 1
+    if (route === 'gno-ethereum') point.gnoToEth += amount
+    if (route === 'ethereum-gno') point.ethToGno += amount
   }
 
   return Array.from(byDate.values()).sort((a, b) =>

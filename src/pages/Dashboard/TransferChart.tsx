@@ -1,4 +1,4 @@
-import { ReactElement, useMemo } from 'react'
+import { ReactElement, useMemo, useState } from 'react'
 
 import type { ChartPoint } from 'hooks/useDashboard'
 
@@ -37,6 +37,11 @@ const TransferChart = ({
     () => (data.length ? Math.max(100 / data.length - 1, 2) : 0),
     [data]
   )
+
+  const [hovered, setHovered] = useState<{
+    index: number
+    key: (typeof SERIES)[number]['key']
+  } | null>(null)
 
   const labelIndices = useMemo(() => {
     const len = data.length
@@ -116,7 +121,7 @@ const TransferChart = ({
                   let stackY = 200
                   return (
                     <g key={point.date}>
-                      {SERIES.map(({ key, color, label }) => {
+                      {SERIES.map(({ key, color }) => {
                         const val = point[key]
                         const h = Math.max((val / maxValue) * 200, 0)
                         stackY -= h
@@ -128,18 +133,50 @@ const TransferChart = ({
                             width={w}
                             height={h}
                             fill={color}
-                            opacity={0.85}
-                          >
-                            <title>
-                              {formatDate(point.date)}: {label} {val}
-                            </title>
-                          </rect>
+                            opacity={hovered?.index === i && hovered.key === key ? 1 : 0.85}
+                            onMouseEnter={() => setHovered({ index: i, key })}
+                            onMouseLeave={() => setHovered(null)}
+                          />
                         )
                       })}
                     </g>
                   )
                 })}
               </svg>
+
+              {hovered &&
+                (() => {
+                  const point = data[hovered.index]
+                  const series = SERIES.find((s) => s.key === hovered.key)!
+                  const x = (hovered.index / data.length) * 1000 + 2
+                  const center = x + (barWidth * 10) / 2
+                  return (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: `${(center / 1000) * 100}%`,
+                        top: 0,
+                        transform: 'translate(-50%, -100%)',
+                        marginTop: -6,
+                        padding: '4px 8px',
+                        background: 'var(--bg-surface-2)',
+                        border: '1px solid var(--border-1)',
+                        borderRadius: 4,
+                        fontSize: 'var(--fs-50)',
+                        color: 'var(--text-primary)',
+                        whiteSpace: 'nowrap',
+                        pointerEvents: 'none',
+                        zIndex: 10,
+                      }}
+                    >
+                      {formatDate(point.date)} · {series.label}:{' '}
+                      {point[series.key].toLocaleString(undefined, {
+                        maximumFractionDigits: 3,
+                      })}{' '}
+                      GNOT
+                    </div>
+                  )
+                })()}
             </div>
 
             <div

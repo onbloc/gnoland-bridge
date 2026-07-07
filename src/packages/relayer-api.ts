@@ -181,11 +181,16 @@ export const getRelayerTransferTokenSymbol = (
   transfer: RelayerTransfer
 ): string => getRelayerTokenSymbol(transfer.base_token)
 
+export const getRelayerTransferAmountValue = (
+  transfer: RelayerTransfer,
+  decimals = 6
+): number => Number(transfer.base_amount) / Math.pow(10, decimals)
+
 export const getRelayerTransferAmount = (
   transfer: RelayerTransfer,
   decimals = 6
 ): string => {
-  const amount = Number(transfer.base_amount) / Math.pow(10, decimals)
+  const amount = getRelayerTransferAmountValue(transfer, decimals)
   if (!Number.isFinite(amount)) return '-'
   if (amount === 0) return '0'
   if (amount < 0.001) return '< 0.001'
