@@ -87,7 +87,7 @@ export function useDashboard() {
         offset: currentPage * PAGE_SIZE,
         orderby: 'desc',
       }),
-    { staleTime: 10_000, refetchInterval: 10_000 }
+    { staleTime: 10_000, refetchInterval: 10_000, keepPreviousData: true }
   )
 
   // Independent of table pagination, so the chart always reflects a
