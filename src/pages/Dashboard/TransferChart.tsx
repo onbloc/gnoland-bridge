@@ -17,8 +17,13 @@ const SERIES = [
 
 const formatDate = (dateStr: string): string => {
   if (dateStr === 'Unknown') return dateStr
-  const d = new Date(dateStr)
-  return `${d.getMonth() + 1}/${d.getDate()}`
+  // dateStr is a "YYYY-MM-DD" UTC calendar-day key (see formatDateKey in
+  // useDashboard.ts). Parse the parts directly instead of going through
+  // `new Date(dateStr)` — that parses as UTC midnight but `.getMonth()` /
+  // `.getDate()` read local time, shifting the label a day back in any
+  // timezone behind UTC.
+  const [, month, day] = dateStr.split('-')
+  return `${Number(month)}/${Number(day)}`
 }
 
 const TransferChart = ({
