@@ -37,10 +37,12 @@ const fetchCoinList = async (rpc: string, address: string): Promise<string> => {
   return atob(encoded).replace(/"/g, '')
 }
 
-const parseCoinAmount = (coinList: string, denom: string): string => {
-  if (!coinList) return '0'
+const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
 
-  const pattern = new RegExp(`^(\\d+)${denom}$`)
+const parseCoinAmount = (coinList: string, denom: string): string => {
+  if (!coinList || !denom) return '0'
+
+  const pattern = new RegExp(`^(\\d+)${escapeRegExp(denom)}$`)
   for (const part of coinList.split(',')) {
     const m = part.trim().match(pattern)
     if (m) return m[1]
@@ -49,12 +51,12 @@ const parseCoinAmount = (coinList: string, denom: string): string => {
 }
 
 // GRC20 tokens are identified by their realm package path (e.g.
-// 'gno.land/r/demo/defi/foo20'), which always contains a '/'. Native coin
+// 'gno.land/r/g1jg8.../grct'), which always contains a '/'. Native coin
 // denoms (ugnot, wugnot) never do, so this is enough to route each whiteList
-// entry to the right query. Multi-token factory realms (e.g. grc20factory,
-// which manage several symbols behind one pkgpath) register each token
-// under grc20reg using fqname's '<pkgPath>.<symbol>' key, since BalanceOf
-// there takes the symbol as an extra argument.
+// entry to the right query. Multi-token factory realms (which manage
+// several symbols behind one pkgpath) register each token under grc20reg
+// using fqname's '<pkgPath>.<symbol>' key, since BalanceOf there takes the
+// symbol as an extra argument; single-token realms take just the address.
 const isGrc20PkgPath = (token: string): boolean => token.includes('/')
 
 // Splits a grc20reg-style '<pkgPath>.<symbol>' key back into its parts. The
@@ -85,6 +87,9 @@ const fetchGrc20Balance = async (
     ? `BalanceOf("${symbol}", "${address}")`
     : `BalanceOf("${address}")`
 
+  // abci_query's `data` param must be base64-encoded (Tendermint2 RPC
+  // rejects raw text with "illegal base64 data") - this is what `gnokey
+  // query -data '...'` does under the hood before it hits the wire.
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -92,7 +97,7 @@ const fetchGrc20Balance = async (
       jsonrpc: '2.0',
       id: Date.now(),
       method: 'abci_query',
-      params: ['vm/qeval', `${pkgPath}.${expression}`, '0', false],
+      params: ['vm/qeval', btoa(`${pkgPath}.${expression}`), '0', false],
     }),
   })
   if (!res.ok) {
@@ -103,8 +108,12 @@ const fetchGrc20Balance = async (
   const encoded: string | undefined = json?.result?.response?.ResponseBase?.Data
   if (!encoded) return '0'
 
-  const decoded = atob(encoded).replace(/"/g, '').trim()
-  return /^\d+$/.test(decoded) ? decoded : '0'
+  // qeval renders results in Gno's repl syntax, e.g. '(999999999000000 int64)'
+  // or '("1000000" string)' - pull the digits out rather than assuming the
+  // whole decoded body is a bare number.
+  const decoded = atob(encoded).trim()
+  const match = decoded.match(/\d+/)
+  return match ? match[0] : '0'
 }
 
 const useGnoBalance = (): {

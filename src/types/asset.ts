@@ -1,12 +1,8 @@
 export enum AssetDenomEnum {
   ugnot = 'ugnot',
   wugnot = 'wugnot',
-  // GRC20 tokens minted via the grc20factory realm are identified by their
-  // grc20reg registry key, '<pkgPath>.<symbol>' (see
-  // gno.land/p/nt/fqname's Construct), since BalanceOf on that realm takes
-  // the symbol as an argument (see useGnoBalance.ts's fetchGrc20Balance).
-  foo = 'gno.land/r/demo/defi/grc20factory.FOO',
-  wfoo = 'wfoo',
+  grct = 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
+  wgrct = 'wgrct',
   // AtomOne is selectable but not wired to any balance fetch or send path yet
   // (see consts/routes.ts) - balance always displays as 0.
   uatone = 'uatone',
@@ -15,16 +11,16 @@ export enum AssetDenomEnum {
 export enum AssetSymbolEnum {
   GNOT = 'GNOT',
   wGNOT = 'wGNOT',
-  FOO = 'FOO',
-  wFOO = 'wFOO',
+  GRCT = 'GRCT',
+  wGRCT = 'wGRCT',
   ATONE = 'ATONE',
 }
 
 export const ASSET_DECIMALS: Record<AssetDenomEnum, number> = {
   [AssetDenomEnum.ugnot]: 6,
   [AssetDenomEnum.wugnot]: 6,
-  [AssetDenomEnum.foo]: 6,
-  [AssetDenomEnum.wfoo]: 6,
+  [AssetDenomEnum.grct]: 6,
+  [AssetDenomEnum.wgrct]: 6,
   [AssetDenomEnum.uatone]: 6,
 }
 
@@ -42,7 +38,7 @@ export type WhiteListType = string[]
 export type BalanceListType = Record<string, string>
 
 import gnotSvg from 'images/gnot.svg'
-import fooSvg from 'images/foo.svg'
+import grctSvg from 'images/grct.svg'
 import atomoneSvg from 'images/atomone.svg'
 
 export const SUPPORTED_ASSETS: AssetType[] = [
@@ -61,17 +57,17 @@ export const SUPPORTED_ASSETS: AssetType[] = [
     decimals: 6,
   },
   {
-    symbol: AssetSymbolEnum.FOO,
-    denom: AssetDenomEnum.foo,
-    name: 'FooToken',
-    logoURI: fooSvg,
+    symbol: AssetSymbolEnum.GRCT,
+    denom: AssetDenomEnum.grct,
+    name: 'GRCToken',
+    logoURI: grctSvg,
     decimals: 6,
   },
   {
-    symbol: AssetSymbolEnum.wFOO,
-    denom: AssetDenomEnum.wfoo,
-    name: 'Wrapped FooToken (Sepolia)',
-    logoURI: fooSvg,
+    symbol: AssetSymbolEnum.wGRCT,
+    denom: AssetDenomEnum.wgrct,
+    name: 'Wrapped GRCToken (Sepolia)',
+    logoURI: grctSvg,
     decimals: 6,
   },
   {

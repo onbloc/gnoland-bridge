@@ -19,11 +19,11 @@ export type BridgeRoute = {
   via?: BridgeVia
 }
 
-// Wrapped FOO (grc20factory.FOO), created via a Gno->Eth INITIALIZE for
-// channel 36 (gno ch 1).
-const WRAPPED_FOO_SEPOLIA =
-  import.meta.env.VITE_WRAPPED_FOO_SEPOLIA ||
-  '0x4b2cEb2dCC1fE3f561aF283A18675eea6cEb6e11'
+// Wrapped GRCT (gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct), created via a Gno->Eth INITIALIZE for
+// channel 39 (gno ch 1).
+const WRAPPED_GRCT_SEPOLIA =
+  import.meta.env.VITE_WRAPPED_GRCT_SEPOLIA ||
+  '0x852fc6095740090e296946192f7F8836b21F7F5b'
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
@@ -38,7 +38,7 @@ const routes: BridgeRoute[] = [
     baseToken: 'ugnot',
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
     source_channel: '1',
-    dest_channel: '36',
+    dest_channel: '39',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -49,7 +49,7 @@ const routes: BridgeRoute[] = [
     chain_id: '11155111',
     baseToken: WRAPPED_UGNOT_SEPOLIA,
     quoteToken: 'ugnot',
-    source_channel: '36',
+    source_channel: '39',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -57,23 +57,23 @@ const routes: BridgeRoute[] = [
   {
     src: 'gnoland',
     dest: 'ethereum',
-    denom: 'gno.land/r/demo/defi/grc20factory.FOO',
+    denom: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
     chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
-    baseToken: 'gno.land/r/demo/defi/grc20factory.FOO',
-    quoteToken: WRAPPED_FOO_SEPOLIA,
+    baseToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
+    quoteToken: WRAPPED_GRCT_SEPOLIA,
     source_channel: '1',
-    dest_channel: '36',
+    dest_channel: '39',
     metadata: '0x',
     via: 'gno-direct',
   },
   {
     src: 'ethereum',
     dest: 'gnoland',
-    denom: 'gno.land/r/demo/defi/grc20factory.FOO',
+    denom: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
     chain_id: '11155111',
-    baseToken: WRAPPED_FOO_SEPOLIA,
-    quoteToken: 'gno.land/r/demo/defi/grc20factory.FOO',
-    source_channel: '36',
+    baseToken: WRAPPED_GRCT_SEPOLIA,
+    quoteToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
+    source_channel: '39',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',

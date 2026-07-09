@@ -1,4 +1,6 @@
 import { BlockChainType } from 'types/network'
+import { SUPPORTED_ASSETS } from 'types/asset'
+import routes from 'consts/routes'
 
 export const RELAYER_API_BASE_URL = (
   (import.meta.env.VITE_RELAYER_API_URL as string | undefined) || '/relayer-api'
@@ -168,12 +170,30 @@ export const getRelayerChainId = (
 export const getRelayerChainName = (chainId: string): string =>
   RELAYER_CHAIN_DISPLAY[chainId]?.name ?? chainId
 
+const DENOM_TO_SYMBOL = new Map<string, string>(
+  SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.symbol])
+)
+
 export const getRelayerTokenSymbol = (token: string): string => {
+  // Native coins and GRC20 realm paths appear on the relayer as their gno
+  // denom, matching an AssetDenomEnum value directly.
+  const directSymbol = DENOM_TO_SYMBOL.get(token)
+  if (directSymbol) return directSymbol
+
+  // EVM-side wrapped tokens appear as their ERC20 address instead - resolve
+  // via routes.ts (baseToken/quoteToken) back to the gno denom they pair
+  // with, then to that denom's display symbol.
   const normalized = token.toLowerCase()
-  if (normalized === 'ugnot') return 'GNOT'
-  // Wrapped ugnot on the EVM side - shown as plain GNOT since it's the same
-  // underlying asset from the user's perspective.
-  if (normalized.startsWith('0x')) return 'GNOT'
+  if (normalized.startsWith('0x')) {
+    const route = routes.find(
+      (r) =>
+        r.baseToken.toLowerCase() === normalized ||
+        r.quoteToken.toLowerCase() === normalized
+    )
+    const symbol = route && DENOM_TO_SYMBOL.get(route.denom)
+    if (symbol) return symbol
+  }
+
   return token.toUpperCase()
 }
 
