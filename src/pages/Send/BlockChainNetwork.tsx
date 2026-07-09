@@ -23,11 +23,9 @@ const BlockChainNetwork = (): ReactElement => {
   // Any two distinct chains can pair now (not just gnoland<->X), so each
   // side just needs to disable whichever value the OTHER side already holds
   // (a chain can't send to itself). The swap button handles flipping pairs.
-  const allChains = [
-    BlockChainType.gnoland,
-    BlockChainType.ethereum,
-    BlockChainType.atomone,
-  ]
+  // AtomOne is left out entirely - no wired send path yet (see
+  // consts/routes.ts).
+  const allChains = [BlockChainType.gnoland, BlockChainType.ethereum]
 
   const fromOptions = allChains.map((value) => ({
     label: NETWORK.blockChainName[value],
