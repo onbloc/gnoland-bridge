@@ -18,6 +18,7 @@ import AuthStore from 'store/AuthStore'
 import useAuth from 'hooks/useAuth'
 import useWalletActivity from 'hooks/useWalletActivity'
 import SendStore from 'store/SendStore'
+import { BlockChainType } from 'types/network'
 import { WarningInfo } from './SendForm/WarningInfo'
 
 const STEP_EYEBROW: Partial<Record<ProcessStatus, string>> = {
@@ -60,9 +61,13 @@ const Send = (): ReactElement => {
   useEffect(() => {
     const { lastFromBlockChain, lastToBlockChain } = getLoginStorage()
 
-    if (lastFromBlockChain) {
+    // AtomOne is hidden from the chain pickers (no wired send path yet) -
+    // don't restore a stale pre-existing selection into it.
+    if (lastFromBlockChain && lastFromBlockChain !== BlockChainType.atomone) {
       setFromBlockChain(lastFromBlockChain)
-      lastToBlockChain && setToBlockChain(lastToBlockChain)
+      if (lastToBlockChain && lastToBlockChain !== BlockChainType.atomone) {
+        setToBlockChain(lastToBlockChain)
+      }
     }
   }, [])
 

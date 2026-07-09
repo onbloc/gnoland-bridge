@@ -93,7 +93,7 @@ const Finish = (): ReactElement => {
           type: 'ERC20',
           options: {
             address: erc20Address,
-            symbol: displayAsset.denom,
+            symbol: displayAsset.symbol,
             decimals: displayAsset.decimals,
           },
         },

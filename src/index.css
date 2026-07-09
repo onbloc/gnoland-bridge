@@ -1609,6 +1609,21 @@ main {
 }
 .copy-token-addr__chip svg { flex-shrink: 0; }
 
+.copy-addr__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  padding: 2px;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: color var(--tt-fast);
+  flex-shrink: 0;
+}
+.copy-addr__btn:hover { color: var(--text-primary); }
+.copy-addr__btn.is-copied { color: var(--bg-brand); }
+
 /* ---- add to wallet button ---- */
 .add-to-wallet {
   display: inline-flex;

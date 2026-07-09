@@ -44,6 +44,39 @@ const truncateMiddle = (value: string, start = 8, end = 6): string => {
   return `${value.slice(0, start)}...${value.slice(-end)}`
 }
 
+// Same icon set as CopyTokenAddress's CopyIcon/CheckIcon, for a consistent
+// copy affordance across the asset box and the activity list.
+const CopyIcon = (): ReactElement => (
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.8"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="9" y="9" width="11" height="11" rx="2" />
+    <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+  </svg>
+)
+
+const CheckIcon = (): ReactElement => (
+  <svg
+    width="12"
+    height="12"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+)
+
 const CopyButton = ({ value }: { value: string }): ReactElement => {
   const [copied, setCopied] = useState(false)
 
@@ -57,22 +90,12 @@ const CopyButton = ({ value }: { value: string }): ReactElement => {
   return (
     <button
       type="button"
-      className="copy-addr__btn"
+      className={`copy-addr__btn${copied ? ' is-copied' : ''}`}
       onClick={copy}
       aria-label={copied ? 'Copied address' : 'Copy address'}
       title={copied ? 'Copied' : 'Copy'}
     >
-      <svg
-        width="12"
-        height="12"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-      >
-        <rect x="9" y="9" width="10" height="10" rx="1" />
-        <path d="M5 15H4a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h9a1 1 0 0 1 1 1v1" />
-      </svg>
+      {copied ? <CheckIcon /> : <CopyIcon />}
     </button>
   )
 }
