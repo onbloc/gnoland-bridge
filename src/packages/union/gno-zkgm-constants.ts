@@ -40,12 +40,12 @@ export const GNO_INIT_TOKEN_SYMBOL = 'ugnot'
 export const GNO_INIT_TOKEN_DECIMALS = 6
 export const GNO_INIT_DEFAULT_BASE_AMOUNT = '1000000'
 
-// Wrapped ugnot predicted by predictWrappedTokenV2 for channel 36 (gno ch 1).
+// Wrapped ugnot predicted by predictWrappedTokenV2 for channel 39 (gno ch 1).
 // Single source of truth — also used as the gno-direct route's quote/base
 // token in `consts/routes.ts`.
 export const WRAPPED_UGNOT_SEPOLIA =
   (import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA as string | undefined) ||
-  '0x840983858242c710D653931a19F179b0ab33f2A3'
+  '0x13CAF18f778Ca499F63D2b1c20DAB6cF5D00312c'
 export const GNO_INIT_DEFAULT_QUOTE_TOKEN = WRAPPED_UGNOT_SEPOLIA
 export const GNO_INIT_RAW_OPERAND_HEX = ''
 
@@ -54,7 +54,7 @@ export const GNO_INIT_RAW_OPERAND_HEX = ''
 // gno-ibc side, and as the default minter below (ZKGM is what mints/burns
 // the wrapped ERC20). Hardcoded because we only operate on Sepolia for now.
 export const ETH_ZKGM_SEPOLIA_ADDRESS =
-  '0x5fbe74a283f7954f10aa04c2edf55578811aeb03' as const
+  '0x5FbE74A283f7954f10AA04C2eDf55578811aeb03' as const
 
 const GNO_INIT_IMPLEMENTATION_ADDRESS_DEFAULT =
   '0xAf739F34ddF951cBC24fdbBa4f76213688E13627'

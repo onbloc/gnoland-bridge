@@ -6,8 +6,8 @@ const ETHER_BASE_DECIMAL = 1e18
 const symbolOfDenom: Record<AssetDenomEnum, AssetSymbolEnum> = {
   [AssetDenomEnum.ugnot]: AssetSymbolEnum.GNOT,
   [AssetDenomEnum.wugnot]: AssetSymbolEnum.wGNOT,
-  [AssetDenomEnum.foo]: AssetSymbolEnum.FOO,
-  [AssetDenomEnum.wfoo]: AssetSymbolEnum.wFOO,
+  [AssetDenomEnum.grct]: AssetSymbolEnum.GRCT,
+  [AssetDenomEnum.wgrct]: AssetSymbolEnum.wGRCT,
   [AssetDenomEnum.uatone]: AssetSymbolEnum.ATONE,
 }
 
