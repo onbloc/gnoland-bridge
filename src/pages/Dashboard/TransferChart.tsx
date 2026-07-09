@@ -160,6 +160,7 @@ const TransferChart = ({
               </svg>
 
               {hovered &&
+                data.length > 0 &&
                 (() => {
                   const point = data[hovered.index]
                   const series = SERIES.find((s) => s.key === hovered.key)!
