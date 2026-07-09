@@ -117,7 +117,19 @@ export default function PacketTracker({
 
     poll()
     intervalRef.current = setInterval(poll, 5_000)
-    return (): void => clearInterval(intervalRef.current)
+
+    // Your Activity's react-query polling refetches on window focus by
+    // default - mirror that here so switching back to this tab catches up
+    // immediately instead of waiting out the rest of the 5s interval.
+    const onVisible = (): void => {
+      if (document.visibilityState === 'visible') poll()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return (): void => {
+      clearInterval(intervalRef.current)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [
     packetHash,
     senderAddress,

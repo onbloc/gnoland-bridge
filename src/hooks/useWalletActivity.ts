@@ -90,6 +90,11 @@ export const useWalletActivity = (): UseWalletActivityReturn => {
       enabled: !!senderAddress,
       staleTime: 5_000,
       refetchInterval: 5_000,
+      // PacketTracker polls via plain setInterval, which keeps running in a
+      // backgrounded tab; react-query's refetchInterval pauses there by
+      // default, so this list can visibly lag behind the Transfer complete
+      // page's status when the two are open in separate tabs.
+      refetchIntervalInBackground: true,
     }
   )
 
