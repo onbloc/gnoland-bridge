@@ -97,13 +97,13 @@ const Dashboard = (): ReactElement => {
         <StatsCard
           label="Processing"
           value={processingCount}
-          subtitle="Loaded page"
+          subtitle="Transfers in progress"
           loading={transfersLoading}
         />
         <StatsCard
           label="Failed"
           value={failedCount}
-          subtitle="Loaded page"
+          subtitle="Transfers failed & returned"
           loading={transfersLoading}
         />
       </div>
