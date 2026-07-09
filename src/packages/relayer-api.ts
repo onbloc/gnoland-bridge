@@ -112,32 +112,6 @@ export const fetchWalletTransfers = (
     })
   )
 
-// Mirrors fetchPacketHashFromTx (gno ABCI lookup) for the EVM side. The
-// client-side estimate computed in eth-gno-zkgm.ts can drift from the packet
-// hash the ZKGM contract actually commits on-chain, so once the relayer has
-// indexed the submission tx we prefer its packet_hash over our own guess.
-// Used by PacketTracker to re-resolve a stuck/mismatched estimate mid-poll.
-export const fetchPacketHashByTxHash = async (
-  address: string,
-  txHash: string,
-  retries = 6,
-  delayMs = 800
-): Promise<string | null> => {
-  for (let attempt = 0; attempt < retries; attempt += 1) {
-    try {
-      const { data } = await fetchWalletTransfers(address, { limit: 5 })
-      const match = data.find((transfer) => transfer.tx_out === txHash)
-      if (match) return match.packet_hash
-    } catch (err) {
-      console.warn('[relayer-api] wallet transfer lookup attempt failed', err)
-    }
-    if (attempt < retries - 1) {
-      await new Promise((r) => setTimeout(r, delayMs))
-    }
-  }
-  return null
-}
-
 export const fetchRelayerHistory = (
   params: RelayerListParams = {}
 ): Promise<RelayerListResponse> =>
@@ -237,3 +211,57 @@ export const getRelayerRouteKey = (
 
 export const isRelayerTransferTerminal = (transfer: RelayerTransfer): boolean =>
   transfer.status === 2 || transfer.status === 3
+
+const isSameAddress = (a?: string, b?: string): boolean =>
+  !!a && !!b && a.toLowerCase() === b.toLowerCase()
+
+// Matches a wallet-transfers entry against the transfer currently being
+// tracked client-side. Falls back progressively because the client's
+// off-chain packetHash/txHash estimates can drift from what actually gets
+// indexed (see fetchPacketHashByTxHash above) - sender/receiver/amount/chain
+// still uniquely identifies the transfer even when both hash estimates miss.
+export const transferMatchesCurrent = ({
+  transfer,
+  packetHash,
+  txHash,
+  senderAddress,
+  receiverAddress,
+  amount,
+  sourceChainId,
+  destinationChainId,
+}: {
+  transfer: RelayerTransfer
+  packetHash?: string
+  txHash?: string
+  senderAddress?: string
+  receiverAddress?: string
+  amount?: string
+  sourceChainId?: string
+  destinationChainId?: string
+}): boolean => {
+  if (packetHash && transfer.packet_hash === packetHash) return true
+  if (txHash && transfer.tx_out === txHash) return true
+  if (!senderAddress || !receiverAddress || !amount) return false
+  return (
+    isSameAddress(transfer.from_address, senderAddress) &&
+    isSameAddress(transfer.to_address, receiverAddress) &&
+    transfer.base_amount === amount &&
+    (!sourceChainId || transfer.src_chain_id === sourceChainId) &&
+    (!destinationChainId || transfer.dst_chain_id === destinationChainId)
+  )
+}
+
+// Finds the tracked transfer in a wallet's recent history using the same
+// progressive matching as transferMatchesCurrent (packetHash -> tx_out ->
+// sender/receiver/amount/chain). Used to keep polling resilient to a
+// drifted/wrong packetHash estimate instead of relying on a single direct
+// /status/{packetHash} lookup.
+export const findMatchingWalletTransfer = async (
+  args: Omit<Parameters<typeof transferMatchesCurrent>[0], 'transfer'> & {
+    address: string
+  },
+  params: RelayerListParams = { limit: 10 }
+): Promise<RelayerTransfer | null> => {
+  const { data } = await fetchWalletTransfers(args.address, params)
+  return data.find((transfer) => transferMatchesCurrent({ ...args, transfer })) ?? null
+}
