@@ -40,7 +40,7 @@ const fetchCoinList = async (rpc: string, address: string): Promise<string> => {
 const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\/]/g, '\\$&')
 
 const parseCoinAmount = (coinList: string, denom: string): string => {
-  if (!coinList) return '0'
+  if (!coinList || !denom) return '0'
 
   const pattern = new RegExp(`^(\\d+)${escapeRegExp(denom)}$`)
   for (const part of coinList.split(',')) {
