@@ -117,7 +117,7 @@ const Finish = (): ReactElement => {
       type: 'custom',
       rpcUrl: gnoExplorerRpc,
     })
-    return `https://gnoscan-git-feature-gns-372-onbloc.vercel.app/transactions/details?${params.toString()}`
+    return `https://gnoscan.io/transactions/details?${params.toString()}`
   }
 
   // EVM tx hashes are 0x-prefixed -> Etherscan. Gno tx hashes go through
