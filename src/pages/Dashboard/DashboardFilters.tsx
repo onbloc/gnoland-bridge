@@ -34,6 +34,7 @@ const DashboardFilters = ({
     >
       <option value="all">All tokens</option>
       <option value="GNOT">GNOT</option>
+      <option value="GRCT">GRCT</option>
     </select>
 
     <select

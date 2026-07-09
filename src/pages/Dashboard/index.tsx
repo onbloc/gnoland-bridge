@@ -113,6 +113,7 @@ const Dashboard = (): ReactElement => {
         data={chartData}
         loading={chartLoading}
         windowSize={chartWindowSize}
+        tokenFilter={tokenFilter}
       />
 
       <div style={{ height: 'var(--space-8)' }} />

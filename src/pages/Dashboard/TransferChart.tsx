@@ -1,6 +1,6 @@
 import { ReactElement, useMemo, useState } from 'react'
 
-import type { ChartPoint } from 'hooks/useDashboard'
+import type { ChartPoint, TokenFilter } from 'hooks/useDashboard'
 
 const SERIES = [
   {
@@ -30,11 +30,17 @@ const TransferChart = ({
   data,
   loading = false,
   windowSize,
+  tokenFilter,
 }: {
   data: ChartPoint[]
   loading?: boolean
   windowSize?: number
+  tokenFilter: TokenFilter
 }): ReactElement => {
+  // 'all' mixes tokens with different units into one sum, so there's no
+  // single unit to label it with - only show a unit once a specific token
+  // is selected.
+  const unitLabel = tokenFilter === 'all' ? '' : ` ${tokenFilter}`
   const maxValue = useMemo(
     () => (data.length ? Math.max(...data.map((d) => d.total), 1) : 1),
     [data]
@@ -181,8 +187,8 @@ const TransferChart = ({
                       {formatDate(point.date)} · {series.label}:{' '}
                       {point[series.key].toLocaleString(undefined, {
                         maximumFractionDigits: 3,
-                      })}{' '}
-                      GNOT
+                      })}
+                      {unitLabel}
                     </div>
                   )
                 })()}
