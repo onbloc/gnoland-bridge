@@ -14,6 +14,7 @@ import {
   getRelayerTransferAmount,
   getRelayerTransferTokenSymbol,
   getTxExplorerUrl,
+  transferMatchesCurrent,
   type RelayerTransfer,
 } from 'packages/relayer-api'
 import AuthStore from 'store/AuthStore'
@@ -27,40 +28,6 @@ const statusToActivityStatus = (status: number): ActivityStatus => {
   if (status === 2) return 'success'
   if (status === 3) return 'failed'
   return 'pending'
-}
-
-const isSameAddress = (a?: string, b?: string): boolean =>
-  !!a && !!b && a.toLowerCase() === b.toLowerCase()
-
-const transferMatchesCurrent = ({
-  transfer,
-  packetHash,
-  txHash,
-  senderAddress,
-  receiverAddress,
-  amount,
-  sourceChainId,
-  destinationChainId,
-}: {
-  transfer: RelayerTransfer
-  packetHash: string
-  txHash?: string
-  senderAddress?: string
-  receiverAddress: string
-  amount: string
-  sourceChainId?: string
-  destinationChainId?: string
-}): boolean => {
-  if (packetHash && transfer.packet_hash === packetHash) return true
-  if (txHash && transfer.tx_out === txHash) return true
-  if (!senderAddress || !receiverAddress || !amount) return false
-  return (
-    isSameAddress(transfer.from_address, senderAddress) &&
-    isSameAddress(transfer.to_address, receiverAddress) &&
-    transfer.base_amount === amount &&
-    (!sourceChainId || transfer.src_chain_id === sourceChainId) &&
-    (!destinationChainId || transfer.dst_chain_id === destinationChainId)
-  )
 }
 
 const toActivityItem = (
@@ -123,6 +90,11 @@ export const useWalletActivity = (): UseWalletActivityReturn => {
       enabled: !!senderAddress,
       staleTime: 5_000,
       refetchInterval: 5_000,
+      // PacketTracker polls via plain setInterval, which keeps running in a
+      // backgrounded tab; react-query's refetchInterval pauses there by
+      // default, so this list can visibly lag behind the Transfer complete
+      // page's status when the two are open in separate tabs.
+      refetchIntervalInBackground: true,
     }
   )
 

@@ -3,6 +3,7 @@ import { useRecoilState, useRecoilValue } from 'recoil'
 
 import { UTIL, NETWORK } from 'consts'
 import routes from 'consts/routes'
+import { getRelayerChainId } from 'packages/relayer-api'
 
 import SendStore from 'store/SendStore'
 import PacketTracker from 'components/PacketTracker'
@@ -41,6 +42,7 @@ const Finish = (): ReactElement => {
   const [displayErrorMessage] = useState(waitForReceiptError)
   const [displayAsset] = useState(asset)
   const [displayFromBlockChain] = useState(fromBlockChain)
+  const [displayToBlockChain] = useState(toBlockChain)
 
   useEffect(() => {
     setToAddress('')
@@ -335,6 +337,10 @@ const Finish = (): ReactElement => {
               : evmWallet?.address
           }
           sourceTxHash={displayRequestTxResult.hash}
+          receiverAddress={displayToAddress}
+          amount={displayAmount}
+          sourceChainId={getRelayerChainId(displayFromBlockChain)}
+          destinationChainId={getRelayerChainId(displayToBlockChain)}
         />
       )}
     </div>

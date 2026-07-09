@@ -1,7 +1,7 @@
 import { ReactElement, useEffect, useState, useRef } from 'react'
 import {
-  fetchPacketHashByTxHash,
   fetchRelayerStatus,
+  findMatchingWalletTransfer,
   getTxExplorerUrl,
   isRelayerTransferTerminal,
   type RelayerTransfer,
@@ -59,61 +59,86 @@ export default function PacketTracker({
   sourceTxUrl,
   senderAddress,
   sourceTxHash,
+  receiverAddress,
+  amount,
+  sourceChainId,
+  destinationChainId,
 }: {
   packetHash: string
   sourceTxUrl?: string
-  // packetHash may be a client-side estimate that drifts from what the chain
-  // actually commits (see fetchPacketHashByTxHash). When present, these let
-  // the poll loop below re-resolve the real hash from the indexed source tx.
   senderAddress?: string
   sourceTxHash?: string
+  // Same match criteria Your Activity (useWalletActivity) uses to find the
+  // tracked transfer in the wallet's indexed history. packetHash is a
+  // client-side estimate that can drift from what the chain actually
+  // commits, so matching progressively (packetHash -> tx_out -> these
+  // sender/receiver/amount/chain fields) recovers even when the hash
+  // estimate never resolves - a single direct /status/{packetHash} lookup
+  // can't.
+  receiverAddress?: string
+  amount?: string
+  sourceChainId?: string
+  destinationChainId?: string
 }): ReactElement {
-  const [correctedHash, setCorrectedHash] = useState<string | null>(null)
   const [transfer, setTransfer] = useState<RelayerTransfer | null>(null)
   const [error, setError] = useState<string | null>(null)
   const intervalRef = useRef<ReturnType<typeof setInterval>>()
 
-  const resolvedPacketHash = correctedHash ?? packetHash
-
   useEffect(() => {
-    if (!resolvedPacketHash) return
+    if (!packetHash) return
 
     const poll = async (): Promise<void> => {
       try {
-        const result = await fetchRelayerStatus(resolvedPacketHash)
+        const result = senderAddress
+          ? await findMatchingWalletTransfer({
+              address: senderAddress,
+              packetHash,
+              txHash: sourceTxHash,
+              senderAddress,
+              receiverAddress,
+              amount,
+              sourceChainId,
+              destinationChainId,
+            })
+          : await fetchRelayerStatus(packetHash).catch(() => null)
+
+        // Not indexed yet - expected right after the tx lands, keep polling.
+        if (!result) return
+
         setTransfer(result)
         setError(null)
         if (isRelayerTransferTerminal(result)) {
           clearInterval(intervalRef.current)
         }
       } catch (e) {
-        // The relayer backend 404s until it has indexed this packet - that's
-        // expected right after the tx lands, so keep polling silently. Our
-        // off-chain packetHash estimate can also just be wrong (drift from
-        // what the chain actually commits) - if so it will 404 forever, so
-        // try resolving the real hash from the indexed source tx instead.
-        if (e instanceof Error && /404/.test(e.message)) {
-          if (senderAddress && sourceTxHash) {
-            const indexedHash = await fetchPacketHashByTxHash(
-              senderAddress,
-              sourceTxHash,
-              1,
-              0
-            ).catch(() => null)
-            if (indexedHash && indexedHash !== resolvedPacketHash) {
-              setCorrectedHash(indexedHash)
-            }
-          }
-          return
-        }
         setError(e instanceof Error ? e.message : 'Failed to query transfer')
       }
     }
 
     poll()
     intervalRef.current = setInterval(poll, 5_000)
-    return (): void => clearInterval(intervalRef.current)
-  }, [resolvedPacketHash, senderAddress, sourceTxHash])
+
+    // Your Activity's react-query polling refetches on window focus by
+    // default - mirror that here so switching back to this tab catches up
+    // immediately instead of waiting out the rest of the 5s interval.
+    const onVisible = (): void => {
+      if (document.visibilityState === 'visible') poll()
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return (): void => {
+      clearInterval(intervalRef.current)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [
+    packetHash,
+    senderAddress,
+    sourceTxHash,
+    receiverAddress,
+    amount,
+    sourceChainId,
+    destinationChainId,
+  ])
 
   if (!packetHash) return <></>
 
@@ -157,10 +182,17 @@ export default function PacketTracker({
         <div className="progress-track__steps">
           {STEP_LABELS.map((label, i) => {
             const isDone = completedStep >= i
-            const isActive = !isDone && completedStep === i - 1
+            const isFailed = failed && i === 1 && !isDone
+            const isActive = !isDone && !isFailed && completedStep === i - 1
             const cls =
               'progress-step' +
-              (isDone ? ' is-done' : isActive ? ' is-active' : '')
+              (isDone
+                ? ' is-done'
+                : isFailed
+                ? ' is-failed'
+                : isActive
+                ? ' is-active'
+                : '')
             return (
               <div key={label} className={cls}>
                 <div className="progress-step__dot">
@@ -172,10 +204,20 @@ export default function PacketTracker({
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
                     >
                       <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                  )}
+                  {isFailed && (
+                    <svg
+                      width="8"
+                      height="8"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="3"
+                    >
+                      <path d="M18 6 6 18M6 6l12 12" />
                     </svg>
                   )}
                   {isActive && <span className="progress-step__pulse" />}

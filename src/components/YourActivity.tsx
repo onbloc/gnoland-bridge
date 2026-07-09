@@ -90,28 +90,35 @@ const ChainChip = ({
   </span>
 )
 
+// Mirrors PacketTracker's completedStep: stage 0 = Sent done/Relayed
+// pending, 1 = Relayed done/Received pending, 2 = all done. -1 (failed,
+// stage 3) intentionally excludes "Sent" from the completedStep check below
+// so it falls through to the index===0 special case instead.
+const getCompletedStep = (stage: ActivityStage): number =>
+  stage === 2 ? 2 : stage === 1 ? 1 : stage === 0 ? 0 : -1
+
 const stepState = (
+  completedStep: number,
   stage: ActivityStage,
   index: number
 ): 'done' | 'active' | 'failed' | 'waiting' => {
   if (index === 0) return 'done'
-  if (index === 1) {
-    if (stage === 2) return 'done'
-    if (stage === 3) return 'failed'
-    return 'active'
-  }
-  if (stage === 2) return 'done'
+  if (completedStep >= index) return 'done'
+  if (stage === 3 && index === 1) return 'failed'
+  if (completedStep === index - 1) return 'active'
   return 'waiting'
 }
 
 const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
-  const fillWidth = item.stage === 2 ? '100%' : '50%'
+  const completedStep = getCompletedStep(item.stage)
+  const fillWidth =
+    completedStep < 1 ? '0%' : completedStep >= 2 ? '100%' : '50%'
   const steps = [
     { label: 'Sent', sub: item.txHref ? 'VIEW TX' : 'SENT' },
     {
       label: 'Relayed',
       sub:
-        item.stage === 2
+        completedStep >= 1
           ? 'COMPLETE'
           : item.stage === 3
           ? 'FAILED'
@@ -120,7 +127,7 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
     {
       label: 'Received',
       sub:
-        item.stage === 2
+        completedStep >= 2
           ? item.txInHref
             ? 'VIEW TX'
             : 'COMPLETE'
@@ -138,7 +145,7 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
       </div>
       <div className="progress-track__steps">
         {steps.map((step, index) => {
-          const state = stepState(item.stage, index)
+          const state = stepState(completedStep, item.stage, index)
           const cls =
             'progress-step' +
             (state === 'done'

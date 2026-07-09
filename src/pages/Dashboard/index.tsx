@@ -18,6 +18,9 @@ const Dashboard = (): ReactElement => {
     summaryLoading,
     summaryError,
     chartData,
+    chartLoading,
+    chartError,
+    chartWindowSize,
     totalTransfers,
     successRate,
     processingCount,
@@ -63,7 +66,7 @@ const Dashboard = (): ReactElement => {
         />
       </div>
 
-      {(transfersError || summaryError) && (
+      {(transfersError || summaryError || chartError) && (
         <div
           className="alert alert--error"
           style={{ marginBottom: 'var(--space-6)' }}
@@ -71,6 +74,7 @@ const Dashboard = (): ReactElement => {
           <div>
             {transfersError?.message ??
               summaryError?.message ??
+              chartError?.message ??
               'Failed to load data'}
           </div>
         </div>
@@ -93,19 +97,24 @@ const Dashboard = (): ReactElement => {
         <StatsCard
           label="Processing"
           value={processingCount}
-          subtitle="Loaded page"
+          subtitle="Transfers in progress"
           loading={transfersLoading}
         />
         <StatsCard
           label="Failed"
           value={failedCount}
-          subtitle="Loaded page"
+          subtitle="Transfers failed & returned"
           loading={transfersLoading}
         />
       </div>
 
       <div style={{ height: 'var(--space-8)' }} />
-      <TransferChart data={chartData} loading={transfersLoading} />
+      <TransferChart
+        data={chartData}
+        loading={chartLoading}
+        windowSize={chartWindowSize}
+        tokenFilter={tokenFilter}
+      />
 
       <div style={{ height: 'var(--space-8)' }} />
       <TransferTable
