@@ -1,17 +1,18 @@
 import { ReactElement, useEffect, useState } from 'react'
 import { useRecoilState, useRecoilValue } from 'recoil'
 
-import { UTIL, NETWORK } from 'consts'
+import { NETWORK, UTIL } from 'consts'
 import routes from 'consts/routes'
 import { getRelayerChainId } from 'packages/relayer-api'
 
-import SendStore from 'store/SendStore'
 import PacketTracker from 'components/PacketTracker'
+import SendStore from 'store/SendStore'
 
 import useAsset from 'hooks/useAsset'
 
-import SendProcessStore from 'store/SendProcessStore'
+import { makeGnoscanTransactionUrl } from 'config/network'
 import AuthStore from 'store/AuthStore'
+import SendProcessStore from 'store/SendProcessStore'
 import { isGnoChain } from 'types/network'
 
 const Finish = (): ReactElement => {
@@ -30,10 +31,10 @@ const Finish = (): ReactElement => {
   const [amount, setAmount] = useRecoilState(SendStore.amount)
 
   const [requestTxResult, setRequestTxResult] = useRecoilState(
-    SendProcessStore.requestTxResult
+    SendProcessStore.requestTxResult,
   )
   const [waitForReceiptError, setWaitForReceiptError] = useRecoilState(
-    SendProcessStore.waitForReceiptError
+    SendProcessStore.waitForReceiptError,
   )
 
   const [displayAmount] = useState(amount)
@@ -56,7 +57,7 @@ const Finish = (): ReactElement => {
   const erc20Address = (() => {
     if (!displayAsset) return undefined
     const route = routes.find(
-      (r) => r.src === 'gnoland' && r.baseToken === displayAsset.denom
+      (r) => r.src === 'gnoland' && r.baseToken === displayAsset.denom,
     )
     return route?.quoteToken
   })()
@@ -103,23 +104,6 @@ const Finish = (): ReactElement => {
     }
   }
 
-  // RPC that gnoscan will use to resolve the source tx. Kept separate
-  // from VITE_GNO_RPC_URL because the in-app value can be a same-origin
-  // proxy path that gnoscan can't dereference. Defaults to the current
-  // devnet endpoint; override via VITE_GNO_EXPLORER_RPC_URL once a
-  // public HTTPS endpoint is available.
-  const gnoExplorerRpc =
-    import.meta.env.VITE_GNO_EXPLORER_RPC_URL || 'http://23.20.153.250:26657/'
-
-  const gnoScanUrl = (txHash: string): string => {
-    const params = new URLSearchParams({
-      txhash: txHash,
-      type: 'custom',
-      rpcUrl: gnoExplorerRpc,
-    })
-    return `https://gnoscan.io/transactions/details?${params.toString()}`
-  }
-
   // EVM tx hashes are 0x-prefixed -> Etherscan. Gno tx hashes go through
   // gnoScanUrl above so the RPC override still applies.
   const SEPOLIA_TX_URL = 'https://sepolia.etherscan.io/tx/'
@@ -127,7 +111,7 @@ const Finish = (): ReactElement => {
     displayRequestTxResult?.success && displayRequestTxResult.hash
       ? displayRequestTxResult.hash.startsWith('0x')
         ? `${SEPOLIA_TX_URL}${displayRequestTxResult.hash}`
-        : gnoScanUrl(displayRequestTxResult.hash)
+        : makeGnoscanTransactionUrl(displayRequestTxResult.hash)
       : undefined
 
   return (
