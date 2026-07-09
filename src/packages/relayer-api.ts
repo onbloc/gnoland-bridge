@@ -1,6 +1,7 @@
-import { BlockChainType } from 'types/network'
-import { SUPPORTED_ASSETS } from 'types/asset'
+import { makeGnoscanTransactionUrl } from 'config/network'
 import routes from 'consts/routes'
+import { SUPPORTED_ASSETS } from 'types/asset'
+import { BlockChainType } from 'types/network'
 
 export const RELAYER_API_BASE_URL = (
   (import.meta.env.VITE_RELAYER_API_URL as string | undefined) || '/relayer-api'
@@ -88,13 +89,11 @@ export const getRelayerStatusUrl = (packetHash: string): string =>
 // Outbound legs (EVM chains) use 0x-prefixed hashes -> Etherscan. Everything
 // else is a Gno-side tx hash -> the gnoscan build pointed at the dev.ibc RPC.
 const SEPOLIA_EXPLORER_TX_URL = 'https://sepolia.etherscan.io/tx/'
-const GNOSCAN_TX_URL =
-  'https://gnoscan.io/transactions/details?type=custom&rpcUrl=http://23.20.153.250:26657/&indexerUrl=&txhash='
 
 export const getTxExplorerUrl = (hash: string): string =>
   hash.startsWith('0x')
     ? `${SEPOLIA_EXPLORER_TX_URL}${encodeURIComponent(hash)}`
-    : `${GNOSCAN_TX_URL}${encodeURIComponent(hash)}`
+    : makeGnoscanTransactionUrl(hash)
 
 export const fetchWalletTransfers = (
   address: string,
