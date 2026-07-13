@@ -1,4 +1,7 @@
-import { WRAPPED_UGNOT_SEPOLIA } from 'packages/union/gno-zkgm-constants'
+import {
+  TokenOrderKind,
+  WRAPPED_UGNOT_SEPOLIA,
+} from 'packages/union/gno-zkgm-constants'
 
 // 'osmosis-hook'  legacy 2-hop via Osmosis wasm-hook intermediary
 //                 (a1-eth-hook / eth-a1-hook). Default when unspecified.
@@ -19,11 +22,8 @@ export type BridgeRoute = {
   // voucher on gno, so its two sides genuinely differ.
   baseDecimals: number
   quoteDecimals: number
-  // Which TokenOrderV2 kind this src->dest leg sends: 'escrow' when src holds
-  // the real/native asset (locks it, destination mints a wrapped
-  // representation), 'unescrow' when src holds a wrapped representation
-  // being sent back (burns it, destination releases its native asset).
-  kind: 'escrow' | 'unescrow'
+  // Which TokenOrderV2 kind this src->dest leg sends. See TokenOrderKind.
+  kind: TokenOrderKind
   source_channel: string
   dest_channel: string
   metadata: string

@@ -15,6 +15,7 @@ import {
   ETH_ZKGM_SEPOLIA_ADDRESS,
   TOKEN_ORDER_KIND_ESCROW,
   TOKEN_ORDER_KIND_UNESCROW,
+  TokenOrderKind,
 } from './gno-zkgm-constants'
 
 // Wire-level packet hash for explorer correlation. Mirrors the eth-a1-hook
@@ -96,7 +97,7 @@ export type EthToGnoDirectInput = {
   // wrapped ERC20 being sent back to reclaim a gno-native asset (ugnot/GRCT
   // family), 'escrow' when eth holds the real asset (ERCT family - lock the
   // native ERC20, mint a wrapped voucher on gno).
-  kind: 'escrow' | 'unescrow'
+  kind: TokenOrderKind
   // Both channel ids come from the route entry so the wire-level send args,
   // the packet hash, and the route table cannot drift out of sync.
   sourceChannelId: number

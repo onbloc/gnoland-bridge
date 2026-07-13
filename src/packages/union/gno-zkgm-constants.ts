@@ -31,6 +31,13 @@ export const TOKEN_ORDER_KIND_ESCROW = 1 as const
 export const TOKEN_ORDER_KIND_UNESCROW = 2 as const
 export const TOKEN_ORDER_KIND_SOLVE = 3 as const
 
+// Which TokenOrderV2 kind a leg sends: 'escrow' when the source side holds
+// the real/native asset (locks it, destination mints a wrapped
+// representation), 'unescrow' when the source side holds a wrapped
+// representation being sent back (burns it, destination releases its
+// native asset). Shared by routes.ts and the gno<->eth send builders.
+export type TokenOrderKind = 'escrow' | 'unescrow'
+
 // Default ugnot wrapped-token init params. Used to prefill the Token Init form
 // so the operator can fire an INITIALIZE packet with one click. Mirrors the
 // `ZkgmERC20.initialize(address authority, address minter, string name,

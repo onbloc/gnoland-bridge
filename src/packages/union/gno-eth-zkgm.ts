@@ -15,6 +15,7 @@ import {
   RAW_SEND_FUNC,
   TOKEN_ORDER_KIND_ESCROW,
   TOKEN_ORDER_KIND_UNESCROW,
+  TokenOrderKind,
 } from './gno-zkgm-constants'
 import { GnoDirectTxResult, GnoVmCallMessage } from './gno-zkgm-types'
 
@@ -49,7 +50,7 @@ export type GnoToEthDirectInput = {
   // asset (ugnot/GRCT family - lock native, mint wrapped on eth), 'unescrow'
   // when gno holds a voucher being sent back to reclaim an eth-native asset
   // (ERCT family - burn the voucher, release the eth-side escrow).
-  kind: 'escrow' | 'unescrow'
+  kind: TokenOrderKind
   // routes.ts' baseDecimals/quoteDecimals. Needed because gno's own voucher
   // ledger is always trimmed to a fixed scale regardless of a voucher's true
   // origin decimals (e.g. ERCT is 18-decimal on Ethereum but its gno voucher
