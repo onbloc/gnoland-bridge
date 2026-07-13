@@ -3,6 +3,10 @@ export enum AssetDenomEnum {
   wugnot = 'wugnot',
   grct = 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
   wgrct = 'wgrct',
+  // ERCT originates on Ethereum (base ERC20), wrapped as a GRC20 on gno.
+  // Deploy/init happens out-of-band via script; only the config below is
+  // wired here. No send path yet - see consts/routes.ts.
+  erctoken = 'erctoken',
   // AtomOne is selectable but not wired to any balance fetch or send path yet
   // (see consts/routes.ts) - balance always displays as 0.
   uatone = 'uatone',
@@ -13,6 +17,7 @@ export enum AssetSymbolEnum {
   wGNOT = 'wGNOT',
   GRCT = 'GRCT',
   wGRCT = 'wGRCT',
+  ERCT = 'ERCT',
   ATONE = 'ATONE',
 }
 
@@ -21,6 +26,7 @@ export const ASSET_DECIMALS: Record<AssetDenomEnum, number> = {
   [AssetDenomEnum.wugnot]: 6,
   [AssetDenomEnum.grct]: 6,
   [AssetDenomEnum.wgrct]: 6,
+  [AssetDenomEnum.erctoken]: 18,
   [AssetDenomEnum.uatone]: 6,
 }
 
@@ -40,6 +46,7 @@ export type BalanceListType = Record<string, string>
 import gnotSvg from 'images/gnot.svg'
 import grctSvg from 'images/grct.svg'
 import atomoneSvg from 'images/atomone.svg'
+import ethereumSvg from 'images/ethereum.svg'
 
 export const SUPPORTED_ASSETS: AssetType[] = [
   {
@@ -69,6 +76,14 @@ export const SUPPORTED_ASSETS: AssetType[] = [
     name: 'Wrapped GRCToken (Sepolia)',
     logoURI: grctSvg,
     decimals: 6,
+  },
+  {
+    symbol: AssetSymbolEnum.ERCT,
+    denom: AssetDenomEnum.erctoken,
+    // TODO: replace with a dedicated ERCT icon once available.
+    name: 'ERCToken',
+    logoURI: ethereumSvg,
+    decimals: 18,
   },
   {
     symbol: AssetSymbolEnum.ATONE,

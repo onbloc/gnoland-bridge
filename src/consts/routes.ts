@@ -20,10 +20,20 @@ export type BridgeRoute = {
 }
 
 // Wrapped GRCT (gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct), created via a Gno->Eth INITIALIZE for
-// channel 39 (gno ch 1).
+// channel 40 (gno ch 1).
 const WRAPPED_GRCT_SEPOLIA =
   import.meta.env.VITE_WRAPPED_GRCT_SEPOLIA ||
-  '0x852fc6095740090e296946192f7F8836b21F7F5b'
+  '0x2B11dF653B0A5B91864274662464D323117084Ee'
+
+// ERCT (ERCToken) - base ERC20 lives on Ethereum this time; the wrapped
+// representation on gno is an IBC-hash denom produced by the separate init
+// script, not through this frontend.
+const ERCT_SEPOLIA =
+  import.meta.env.VITE_ERCT_SEPOLIA ||
+  '0x3128D525320aa5C07b1cef3d413DA0299f03946E'
+const WRAPPED_ERCT_GNO =
+  import.meta.env.VITE_WRAPPED_ERCT_GNO ||
+  'ibc/ab48a434e034509a65fc52a24388c05f628dcc15'
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
@@ -38,7 +48,7 @@ const routes: BridgeRoute[] = [
     baseToken: 'ugnot',
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
     source_channel: '1',
-    dest_channel: '39',
+    dest_channel: '40',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -49,7 +59,7 @@ const routes: BridgeRoute[] = [
     chain_id: '11155111',
     baseToken: WRAPPED_UGNOT_SEPOLIA,
     quoteToken: 'ugnot',
-    source_channel: '39',
+    source_channel: '40',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -62,7 +72,7 @@ const routes: BridgeRoute[] = [
     baseToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
     quoteToken: WRAPPED_GRCT_SEPOLIA,
     source_channel: '1',
-    dest_channel: '39',
+    dest_channel: '40',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -73,8 +83,38 @@ const routes: BridgeRoute[] = [
     chain_id: '11155111',
     baseToken: WRAPPED_GRCT_SEPOLIA,
     quoteToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
-    source_channel: '39',
+    source_channel: '40',
     dest_channel: '1',
+    metadata: '0x',
+    via: 'gno-direct',
+  },
+  // ERCT: base ERC20 on Ethereum, wrapped GRC20 on gno (reverse of the GRCT
+  // pair above). No wired send path yet - useBridge.ts hardcodes ESCROW for
+  // every gno->eth direct send and UNESCROW for every eth->gno direct send,
+  // which is backwards for a token whose base lives on Ethereum. These
+  // entries are config-only until matching eth->gno ESCROW / gno->eth
+  // UNESCROW builders exist.
+  {
+    src: 'ethereum',
+    dest: 'gnoland',
+    denom: 'erctoken',
+    chain_id: '11155111',
+    baseToken: ERCT_SEPOLIA,
+    quoteToken: WRAPPED_ERCT_GNO,
+    source_channel: '40',
+    dest_channel: '1',
+    metadata: '0x',
+    via: 'gno-direct',
+  },
+  {
+    src: 'gnoland',
+    dest: 'ethereum',
+    denom: 'erctoken',
+    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
+    baseToken: WRAPPED_ERCT_GNO,
+    quoteToken: ERCT_SEPOLIA,
+    source_channel: '1',
+    dest_channel: '40',
     metadata: '0x',
     via: 'gno-direct',
   },
