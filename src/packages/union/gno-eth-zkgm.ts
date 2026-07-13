@@ -14,6 +14,7 @@ import {
   OP_TOKEN_ORDER,
   RAW_SEND_FUNC,
   TOKEN_ORDER_KIND_ESCROW,
+  TOKEN_ORDER_KIND_UNESCROW,
 } from './gno-zkgm-constants'
 import { GnoDirectTxResult, GnoVmCallMessage } from './gno-zkgm-types'
 
@@ -44,17 +45,32 @@ export type GnoToEthDirectInput = {
   baseToken: string
   quoteToken: string
   solverMetadata: string
+  // Which side of the pair baseToken is: 'escrow' when gno holds the real
+  // asset (ugnot/GRCT family - lock native, mint wrapped on eth), 'unescrow'
+  // when gno holds a voucher being sent back to reclaim an eth-native asset
+  // (ERCT family - burn the voucher, release the eth-side escrow).
+  kind: 'escrow' | 'unescrow'
+  // routes.ts' baseDecimals/quoteDecimals. Needed because gno's own voucher
+  // ledger is always trimmed to a fixed scale regardless of a voucher's true
+  // origin decimals (e.g. ERCT is 18-decimal on Ethereum but its gno voucher
+  // ledger is 6) - confirmed against gno-ibc's own
+  // token_send_voucher_with_decimal_trim_filetest.gno: the wire-level
+  // baseAmount/quoteAmount must carry full origin precision even though the
+  // ledger deduction happens at the trimmed scale.
+  baseDecimals: number
+  quoteDecimals: number
   // Both channel ids come from the route entry so the wire-level SendRaw args,
   // the off-chain packet hash, and the route table cannot drift apart.
   sourceChannelId: number
   destinationChannelId: number
 }
 
-// TokenOrderV2 (Kind=ESCROW) ZKGM send via /vm.m_call -> RawSend wrapper.
-// /vm.m_run can't be used here: Send's IsUserCall gate drops attached coins
-// when the previous realm is the temporary `main` package, so the realm's
-// coins-mismatch check always fails. Calling RawSend directly preserves the
-// EOA as the previous realm, letting OriginSend report the deposit.
+// TokenOrderV2 (Kind=ESCROW or UNESCROW, per input.kind) ZKGM send via
+// /vm.m_call -> RawSend wrapper. /vm.m_run can't be used here: Send's
+// IsUserCall gate drops attached coins when the previous realm is the
+// temporary `main` package, so the realm's coins-mismatch check always
+// fails. Calling RawSend directly preserves the EOA as the previous realm,
+// letting OriginSend report the deposit.
 export const makeGnoDirectToEthTransaction = async (
   input: GnoToEthDirectInput
 ): Promise<GnoDirectTxResult> => {
@@ -65,6 +81,9 @@ export const makeGnoDirectToEthTransaction = async (
     baseToken,
     quoteToken,
     solverMetadata,
+    kind,
+    baseDecimals,
+    quoteDecimals,
     sourceChannelId,
     destinationChannelId,
   } = input
@@ -97,6 +116,17 @@ export const makeGnoDirectToEthTransaction = async (
   const baseTokenHex = toBaseTokenHex(baseToken)
   const quoteTokenHex = toQuoteTokenHex(quoteToken)
 
+  // amount is at gno's local scale (baseDecimals). When quoteDecimals is
+  // higher (only happens for a voucher whose origin uses more decimals than
+  // gno's trimmed ledger, e.g. ERCT), the wire amount must be upscaled to
+  // that origin precision - gno's SendRaw downscales it right back down to
+  // baseDecimals for the actual ledger deduction, but rejects wire amounts
+  // that aren't a clean multiple of the scale factor ("amount not divisible
+  // by token scale factor"). No-op (factor 1) for every same-decimals route.
+  const scaleExponent = quoteDecimals - baseDecimals
+  const wireAmount =
+    scaleExponent > 0 ? amount * 10n ** BigInt(scaleExponent) : amount
+
   const operandHex = stripHexPrefix(
     await encodeTokenOrderV2Hex({
       sender: Ucs05.CosmosDisplay.make({
@@ -104,10 +134,11 @@ export const makeGnoDirectToEthTransaction = async (
       }),
       receiver: Ucs05.EvmDisplay.make({ address: rcpt as `0x${string}` }),
       baseToken: baseTokenHex,
-      baseAmount: amount,
+      baseAmount: wireAmount,
       quoteToken: quoteTokenHex,
-      quoteAmount: amount,
-      kind: TOKEN_ORDER_KIND_ESCROW,
+      quoteAmount: wireAmount,
+      kind:
+        kind === 'escrow' ? TOKEN_ORDER_KIND_ESCROW : TOKEN_ORDER_KIND_UNESCROW,
       metadata: metadataHex,
     })
   )
@@ -150,12 +181,17 @@ export const makeGnoDirectToEthTransaction = async (
   ])
   const hash = keccak256(raw)
 
-  // ESCROW Kind requires the deposit to flow into the ZKGM realm. For native
-  // coins, the /vm.m_call `send` field carries the raw denom amount (e.g.
-  // "1000000ugnot") and the realm's requireSentCoin compares against the
-  // operand baseAmount. GRC20 base tokens are pulled by the realm via
-  // TransferFrom instead, so `send` must stay empty — the sender needs to
-  // have Approve()'d the realm address beforehand.
+  // verifyTokenOrderV2 (gno realm) only ever attaches native coins via the
+  // /vm.m_call `send` field; anything else is realm-custodied and `send`
+  // must stay empty. Two cases fall under "anything else":
+  //  - GRC20 base tokens (ESCROW kind, e.g. GRCT): pulled via TransferFrom -
+  //    the sender needs to have Approve()'d the realm address beforehand.
+  //  - voucher base tokens (UNESCROW kind, e.g. ERCT's ibc/... denom): the
+  //    realm burns its own ledger entry for the caller (burnVoucher) -  no
+  //    approve, no attached coins, since the realm already custodies the
+  //    voucher accounting itself.
+  // isGrc20BaseToken's `.includes('/')` check happens to catch both (voucher
+  // denoms are also `/`-prefixed), which is why one branch suffices here.
   const sendAmount = isGrc20BaseToken(baseToken)
     ? ''
     : `${amount.toString()}${baseToken}`

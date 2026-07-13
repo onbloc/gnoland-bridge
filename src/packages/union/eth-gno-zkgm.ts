@@ -13,6 +13,7 @@ import { utf8ToHex } from './gno-abi'
 import { encodeTokenOrderV2Hex } from './gno-token-order'
 import {
   ETH_ZKGM_SEPOLIA_ADDRESS,
+  TOKEN_ORDER_KIND_ESCROW,
   TOKEN_ORDER_KIND_UNESCROW,
 } from './gno-zkgm-constants'
 
@@ -91,16 +92,23 @@ export type EthToGnoDirectInput = {
   baseToken: string
   quoteToken: string
   solverMetadata: string
+  // Which side of the pair baseToken is: 'unescrow' when eth holds a
+  // wrapped ERC20 being sent back to reclaim a gno-native asset (ugnot/GRCT
+  // family), 'escrow' when eth holds the real asset (ERCT family - lock the
+  // native ERC20, mint a wrapped voucher on gno).
+  kind: 'escrow' | 'unescrow'
   // Both channel ids come from the route entry so the wire-level send args,
   // the packet hash, and the route table cannot drift out of sync.
   sourceChannelId: number
   destinationChannelId: number
 }
 
-// TokenOrderV2 (Kind=UNESCROW) single-hop ZKGM send from EVM (Sepolia) into
-// Gno. Counterpart of makeGnoDirectToEthTransaction: the wrapped ERC20 minted
-// on EVM during ESCROW is sent back to ZKGM, which burns it and triggers a
-// PacketRecv on gno that releases the escrowed ugnot to `rcpt`.
+// TokenOrderV2 (Kind=ESCROW or UNESCROW, per input.kind) single-hop ZKGM send
+// from EVM (Sepolia) into Gno. For UNESCROW (ugnot/GRCT family): the wrapped
+// ERC20 minted on EVM during ESCROW is sent back to ZKGM, which burns it and
+// triggers a PacketRecv on gno that releases the escrowed native asset to
+// `rcpt`. For ESCROW (ERCT family): a real ERC20 is locked into ZKGM, which
+// triggers a PacketRecv on gno that mints/credits a voucher to `rcpt`.
 export const makeEthToGnoDirectTransaction = async (
   input: EthToGnoDirectInput
 ): Promise<EthToGnoDirectTxResult> => {
@@ -111,6 +119,7 @@ export const makeEthToGnoDirectTransaction = async (
     baseToken,
     quoteToken,
     solverMetadata,
+    kind,
     sourceChannelId,
     destinationChannelId,
   } = input
@@ -146,6 +155,9 @@ export const makeEthToGnoDirectTransaction = async (
       : utf8ToHex(solverMetadata)
     : '0x'
 
+  const resolvedKind =
+    kind === 'escrow' ? TOKEN_ORDER_KIND_ESCROW : TOKEN_ORDER_KIND_UNESCROW
+
   const operandHex = await encodeTokenOrderV2Hex({
     sender: Ucs05.EvmDisplay.make({ address: sender }),
     receiver: Ucs05.CosmosDisplay.make({
@@ -155,7 +167,7 @@ export const makeEthToGnoDirectTransaction = async (
     baseAmount: amount,
     quoteToken: toQuoteTokenHex(quoteToken),
     quoteAmount: amount,
-    kind: TOKEN_ORDER_KIND_UNESCROW,
+    kind: resolvedKind,
     metadata: metadataHex,
   })
 
@@ -197,7 +209,7 @@ export const makeEthToGnoDirectTransaction = async (
           amount,
           toQuoteTokenHex(quoteToken),
           amount,
-          TOKEN_ORDER_KIND_UNESCROW,
+          resolvedKind,
           metadataHex,
         ],
       })

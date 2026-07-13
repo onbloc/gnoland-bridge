@@ -21,7 +21,7 @@ const useSendValidate = (): {
   validateFee: () => ValidateItemResultType
   validateSendData: () => Promise<ValidateResultType>
 } => {
-  const { formatBalance } = useAsset()
+  const { formatBalance, getDecimals } = useAsset()
 
   // Send Data
   const asset = useRecoilValue(SendStore.asset)
@@ -84,9 +84,14 @@ const useSendValidate = (): {
     }
 
     if (false === bnAmount.isInteger()) {
+      // bnAmount is already scaled to raw units (SendForm multiplies by
+      // 10^decimals before storing), so a non-integer here means the user
+      // typed more fractional digits than the current asset's chain
+      // actually supports (e.g. 18 for ERCT on Ethereum, 6 for gno assets).
+      const decimalPlaces = Math.round(Math.log10(getDecimals()))
       return {
         isValid: false,
-        errorMessage: `Amount must be within 6 decimal points`,
+        errorMessage: `Amount must be within ${decimalPlaces} decimal points`,
       }
     }
 

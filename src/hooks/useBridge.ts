@@ -161,6 +161,9 @@ export default function useBridge(): UseBridgeReturn {
               baseToken: route.baseToken,
               quoteToken: route.quoteToken,
               solverMetadata: route.metadata,
+              kind: route.kind,
+              baseDecimals: route.baseDecimals,
+              quoteDecimals: route.quoteDecimals,
               sourceChannelId,
               destinationChannelId,
             })
@@ -218,9 +221,10 @@ export default function useBridge(): UseBridgeReturn {
             return { success: false, errorMessage: 'EVM wallet not connected' }
           }
 
-          // gno-direct UNESCROW path (EVM -> Gno). The wrapped ugnot ERC20
-          // only lives on Sepolia today, so we prompt a chain switch before
-          // building the tx instead of letting the SDK throw mid-broadcast.
+          // gno-direct EVM -> Gno path (ESCROW or UNESCROW per route.kind -
+          // see routes.ts). Every route's EVM-side token only lives on
+          // Sepolia today, so we prompt a chain switch before building the
+          // tx instead of letting the SDK throw mid-broadcast.
           const route = routes.find(
             (r) =>
               r.src.toLowerCase() === src.toLowerCase() &&
@@ -256,6 +260,7 @@ export default function useBridge(): UseBridgeReturn {
               baseToken: route.baseToken,
               quoteToken: route.quoteToken,
               solverMetadata: route.metadata,
+              kind: route.kind,
               sourceChannelId: Number.parseInt(route.source_channel, 10),
               destinationChannelId: Number.parseInt(route.dest_channel, 10),
             })

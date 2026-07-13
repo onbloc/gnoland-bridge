@@ -19,6 +19,11 @@ export type BridgeRoute = {
   // voucher on gno, so its two sides genuinely differ.
   baseDecimals: number
   quoteDecimals: number
+  // Which TokenOrderV2 kind this src->dest leg sends: 'escrow' when src holds
+  // the real/native asset (locks it, destination mints a wrapped
+  // representation), 'unescrow' when src holds a wrapped representation
+  // being sent back (burns it, destination releases its native asset).
+  kind: 'escrow' | 'unescrow'
   source_channel: string
   dest_channel: string
   metadata: string
@@ -55,6 +60,7 @@ const routes: BridgeRoute[] = [
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
     baseDecimals: 6,
     quoteDecimals: 6,
+    kind: 'escrow',
     source_channel: '1',
     dest_channel: '40',
     metadata: '0x',
@@ -69,6 +75,7 @@ const routes: BridgeRoute[] = [
     quoteToken: 'ugnot',
     baseDecimals: 6,
     quoteDecimals: 6,
+    kind: 'unescrow',
     source_channel: '40',
     dest_channel: '1',
     metadata: '0x',
@@ -83,6 +90,7 @@ const routes: BridgeRoute[] = [
     quoteToken: WRAPPED_GRCT_SEPOLIA,
     baseDecimals: 6,
     quoteDecimals: 6,
+    kind: 'escrow',
     source_channel: '1',
     dest_channel: '40',
     metadata: '0x',
@@ -97,17 +105,15 @@ const routes: BridgeRoute[] = [
     quoteToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
     baseDecimals: 6,
     quoteDecimals: 6,
+    kind: 'unescrow',
     source_channel: '40',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
   },
-  // ERCT: base ERC20 on Ethereum, wrapped GRC20 on gno (reverse of the GRCT
-  // pair above). No wired send path yet - useBridge.ts hardcodes ESCROW for
-  // every gno->eth direct send and UNESCROW for every eth->gno direct send,
-  // which is backwards for a token whose base lives on Ethereum. These
-  // entries are config-only until matching eth->gno ESCROW / gno->eth
-  // UNESCROW builders exist.
+  // ERCT: base ERC20 on Ethereum, wrapped voucher on gno (reverse of the
+  // GRCT pair above) - eth->gno leg is 'escrow' (lock ERCT, mint voucher),
+  // gno->eth leg is 'unescrow' (burn voucher, release ERCT).
   {
     src: 'ethereum',
     dest: 'gnoland',
@@ -117,6 +123,7 @@ const routes: BridgeRoute[] = [
     quoteToken: WRAPPED_ERCT_GNO,
     baseDecimals: 18,
     quoteDecimals: 6,
+    kind: 'escrow',
     source_channel: '40',
     dest_channel: '1',
     metadata: '0x',
@@ -131,6 +138,7 @@ const routes: BridgeRoute[] = [
     quoteToken: ERCT_SEPOLIA,
     baseDecimals: 6,
     quoteDecimals: 18,
+    kind: 'unescrow',
     source_channel: '1',
     dest_channel: '40',
     metadata: '0x',
@@ -149,6 +157,7 @@ const routes: BridgeRoute[] = [
     quoteToken: 'uatone',
     baseDecimals: 6,
     quoteDecimals: 6,
+    kind: 'escrow',
     source_channel: '0',
     dest_channel: '0',
     metadata: '0x',

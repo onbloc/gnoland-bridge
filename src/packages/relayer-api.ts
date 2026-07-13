@@ -177,19 +177,21 @@ export const getRelayerTransferTokenSymbol = (
   transfer: RelayerTransfer
 ): string => getRelayerTokenSymbol(transfer.base_token)
 
-// base_amount is a raw value denominated in transfer.base_token - the exact
-// token that left its origin chain - so its own decimals (routes.ts'
-// baseDecimals, not a canonical per-asset value) determine the correct
-// human-readable scale. This matters once a token's two sides differ, e.g.
-// an 18-decimal EVM ERC20 (ERCT) wrapped as a 6-decimal gno voucher: the
-// same logical asset needs 18 for an eth->gno transfer's base_amount and 6
-// for a gno->eth one.
+// base_amount is a wire-level value, always expressed at the higher of the
+// two sides' decimals (the true origin's precision) regardless of which
+// direction the transfer runs - confirmed against gno-ibc's own
+// token_send_voucher_with_decimal_trim_filetest.gno: even a gno->eth voucher
+// burn re-encodes its wire amount at the origin's full precision (e.g. 18
+// for ERCT), not gno's own 6-decimal ledger scale. Using just baseDecimals
+// here would be wrong for exactly that leg (ERCT gno->eth has
+// baseDecimals=6, quoteDecimals=18, but the wire amount is 18-scaled).
 export const getRelayerTransferBaseDecimals = (
   transfer: RelayerTransfer
 ): number => {
   const normalized = transfer.base_token.toLowerCase()
   const route = routes.find((r) => r.baseToken.toLowerCase() === normalized)
-  return route?.baseDecimals ?? 6
+  if (!route) return 6
+  return Math.max(route.baseDecimals, route.quoteDecimals)
 }
 
 export const getRelayerTransferAmountValue = (
