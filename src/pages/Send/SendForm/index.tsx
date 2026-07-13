@@ -118,11 +118,16 @@ const SendForm = ({
   }, [amount, toAddress, toBlockChain, fromBlockChain, asset])
 
   useEffect(() => {
-    onChangeAmount({ value: inputAmount })
-    getAssetList().then((): void => {
-      dbcGetValidation()
-    })
+    getAssetList()
   }, [gnoWallet, evmWallet, toBlockChain, fromBlockChain])
+
+  // Recalculate the wire amount once the selected asset's decimals are
+  // known for the current fromBlockChain (getAssetList resolves this
+  // asynchronously). Keying on decimals rather than the effect above avoids
+  // rescaling inputAmount with the previous chain's decimals.
+  useEffect(() => {
+    onChangeAmount({ value: inputAmount })
+  }, [asset?.decimals])
 
   const balanceText = asset
     ? `${formatBalance(asset.balance || '0', asset.denom)} ${asset.symbol}`

@@ -147,15 +147,13 @@ const DENOM_TO_SYMBOL = new Map<string, string>(
   SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.symbol])
 )
 
-export const getRelayerTokenSymbol = (token: string): string => {
-  // Native coins and GRC20 realm paths appear on the relayer as their gno
-  // denom, matching an AssetDenomEnum value directly.
-  const directSymbol = DENOM_TO_SYMBOL.get(token)
-  if (directSymbol) return directSymbol
+// Resolves a relayer-reported token - a gno denom, or an 0x EVM address - to
+// the AssetDenomEnum value it represents. EVM-side tokens appear as their
+// ERC20 address instead of a denom, so they're resolved via routes.ts
+// (baseToken/quoteToken) back to the gno denom they pair with.
+const resolveTokenDenom = (token: string): string | undefined => {
+  if (DENOM_TO_SYMBOL.has(token)) return token
 
-  // EVM-side wrapped tokens appear as their ERC20 address instead - resolve
-  // via routes.ts (baseToken/quoteToken) back to the gno denom they pair
-  // with, then to that denom's display symbol.
   const normalized = token.toLowerCase()
   if (normalized.startsWith('0x')) {
     const route = routes.find(
@@ -163,25 +161,47 @@ export const getRelayerTokenSymbol = (token: string): string => {
         r.baseToken.toLowerCase() === normalized ||
         r.quoteToken.toLowerCase() === normalized
     )
-    const symbol = route && DENOM_TO_SYMBOL.get(route.denom)
-    if (symbol) return symbol
+    if (route) return route.denom
   }
 
-  return token.toUpperCase()
+  return undefined
+}
+
+export const getRelayerTokenSymbol = (token: string): string => {
+  const denom = resolveTokenDenom(token)
+  const symbol = denom !== undefined ? DENOM_TO_SYMBOL.get(denom) : undefined
+  return symbol ?? token.toUpperCase()
 }
 
 export const getRelayerTransferTokenSymbol = (
   transfer: RelayerTransfer
 ): string => getRelayerTokenSymbol(transfer.base_token)
 
+// base_amount is a wire-level value, always expressed at the higher of the
+// two sides' decimals (the true origin's precision) regardless of which
+// direction the transfer runs - confirmed against gno-ibc's own
+// token_send_voucher_with_decimal_trim_filetest.gno: even a gno->eth voucher
+// burn re-encodes its wire amount at the origin's full precision (e.g. 18
+// for ERCT), not gno's own 6-decimal ledger scale. Using just baseDecimals
+// here would be wrong for exactly that leg (ERCT gno->eth has
+// baseDecimals=6, quoteDecimals=18, but the wire amount is 18-scaled).
+export const getRelayerTransferBaseDecimals = (
+  transfer: RelayerTransfer
+): number => {
+  const normalized = transfer.base_token.toLowerCase()
+  const route = routes.find((r) => r.baseToken.toLowerCase() === normalized)
+  if (!route) return 6
+  return Math.max(route.baseDecimals, route.quoteDecimals)
+}
+
 export const getRelayerTransferAmountValue = (
   transfer: RelayerTransfer,
-  decimals = 6
+  decimals = getRelayerTransferBaseDecimals(transfer)
 ): number => Number(transfer.base_amount) / Math.pow(10, decimals)
 
 export const getRelayerTransferAmount = (
   transfer: RelayerTransfer,
-  decimals = 6
+  decimals = getRelayerTransferBaseDecimals(transfer)
 ): string => {
   const amount = getRelayerTransferAmountValue(transfer, decimals)
   if (!Number.isFinite(amount)) return '-'

@@ -31,12 +31,19 @@ export const TOKEN_ORDER_KIND_ESCROW = 1 as const
 export const TOKEN_ORDER_KIND_UNESCROW = 2 as const
 export const TOKEN_ORDER_KIND_SOLVE = 3 as const
 
+// Which TokenOrderV2 kind a leg sends: 'escrow' when the source side holds
+// the real/native asset (locks it, destination mints a wrapped
+// representation), 'unescrow' when the source side holds a wrapped
+// representation being sent back (burns it, destination releases its
+// native asset). Shared by routes.ts and the gno<->eth send builders.
+export type TokenOrderKind = 'escrow' | 'unescrow'
+
 // Default ugnot wrapped-token init params. Used to prefill the Token Init form
 // so the operator can fire an INITIALIZE packet with one click. Mirrors the
 // `ZkgmERC20.initialize(address authority, address minter, string name,
 // string symbol, uint8 decimals)` signature on the EVM side.
 export const GNO_INIT_TOKEN_NAME = 'gno.land'
-export const GNO_INIT_TOKEN_SYMBOL = 'ugnot'
+export const GNO_INIT_TOKEN_SYMBOL = 'GNOT'
 export const GNO_INIT_TOKEN_DECIMALS = 6
 export const GNO_INIT_DEFAULT_BASE_AMOUNT = '1000000'
 
@@ -45,7 +52,7 @@ export const GNO_INIT_DEFAULT_BASE_AMOUNT = '1000000'
 // token in `consts/routes.ts`.
 export const WRAPPED_UGNOT_SEPOLIA =
   (import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA as string | undefined) ||
-  '0x13CAF18f778Ca499F63D2b1c20DAB6cF5D00312c'
+  '0x7fF60639D3e44c9d45034D6978d76a337E8AA38B'
 export const GNO_INIT_DEFAULT_QUOTE_TOKEN = WRAPPED_UGNOT_SEPOLIA
 export const GNO_INIT_RAW_OPERAND_HEX = ''
 

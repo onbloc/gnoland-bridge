@@ -1,4 +1,7 @@
-import { WRAPPED_UGNOT_SEPOLIA } from 'packages/union/gno-zkgm-constants'
+import {
+  TokenOrderKind,
+  WRAPPED_UGNOT_SEPOLIA,
+} from 'packages/union/gno-zkgm-constants'
 
 // 'osmosis-hook'  legacy 2-hop via Osmosis wasm-hook intermediary
 //                 (a1-eth-hook / eth-a1-hook). Default when unspecified.
@@ -13,6 +16,14 @@ export type BridgeRoute = {
   chain_id: string
   baseToken: string
   quoteToken: string
+  // Raw on-chain decimals for baseToken/quoteToken respectively. Usually
+  // equal (ugnot/wugnot and grct/wgrct both wrap 1:1 at 6 decimals), but not
+  // guaranteed - ERCT's 18-decimal EVM ERC20 is rescaled to a 6-decimal
+  // voucher on gno, so its two sides genuinely differ.
+  baseDecimals: number
+  quoteDecimals: number
+  // Which TokenOrderV2 kind this src->dest leg sends. See TokenOrderKind.
+  kind: TokenOrderKind
   source_channel: string
   dest_channel: string
   metadata: string
@@ -20,10 +31,20 @@ export type BridgeRoute = {
 }
 
 // Wrapped GRCT (gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct), created via a Gno->Eth INITIALIZE for
-// channel 39 (gno ch 1).
+// channel 40 (gno ch 1).
 const WRAPPED_GRCT_SEPOLIA =
   import.meta.env.VITE_WRAPPED_GRCT_SEPOLIA ||
-  '0x852fc6095740090e296946192f7F8836b21F7F5b'
+  '0x2B11dF653B0A5B91864274662464D323117084Ee'
+
+// ERCT (ERCToken) - base ERC20 lives on Ethereum this time; the wrapped
+// representation on gno is an IBC-hash denom produced by the separate init
+// script, not through this frontend.
+const ERCT_SEPOLIA =
+  import.meta.env.VITE_ERCT_SEPOLIA ||
+  '0x3128D525320aa5C07b1cef3d413DA0299f03946E'
+const WRAPPED_ERCT_GNO =
+  import.meta.env.VITE_WRAPPED_ERCT_GNO ||
+  'ibc/ab48a434e034509a65fc52a24388c05f628dcc15'
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
@@ -37,8 +58,11 @@ const routes: BridgeRoute[] = [
     chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
     baseToken: 'ugnot',
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
+    baseDecimals: 6,
+    quoteDecimals: 6,
+    kind: 'escrow',
     source_channel: '1',
-    dest_channel: '39',
+    dest_channel: '40',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -49,7 +73,10 @@ const routes: BridgeRoute[] = [
     chain_id: '11155111',
     baseToken: WRAPPED_UGNOT_SEPOLIA,
     quoteToken: 'ugnot',
-    source_channel: '39',
+    baseDecimals: 6,
+    quoteDecimals: 6,
+    kind: 'unescrow',
+    source_channel: '40',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -61,8 +88,11 @@ const routes: BridgeRoute[] = [
     chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
     baseToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
     quoteToken: WRAPPED_GRCT_SEPOLIA,
+    baseDecimals: 6,
+    quoteDecimals: 6,
+    kind: 'escrow',
     source_channel: '1',
-    dest_channel: '39',
+    dest_channel: '40',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -73,8 +103,44 @@ const routes: BridgeRoute[] = [
     chain_id: '11155111',
     baseToken: WRAPPED_GRCT_SEPOLIA,
     quoteToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
-    source_channel: '39',
+    baseDecimals: 6,
+    quoteDecimals: 6,
+    kind: 'unescrow',
+    source_channel: '40',
     dest_channel: '1',
+    metadata: '0x',
+    via: 'gno-direct',
+  },
+  // ERCT: base ERC20 on Ethereum, wrapped voucher on gno (reverse of the
+  // GRCT pair above) - eth->gno leg is 'escrow' (lock ERCT, mint voucher),
+  // gno->eth leg is 'unescrow' (burn voucher, release ERCT).
+  {
+    src: 'ethereum',
+    dest: 'gnoland',
+    denom: WRAPPED_ERCT_GNO,
+    chain_id: '11155111',
+    baseToken: ERCT_SEPOLIA,
+    quoteToken: WRAPPED_ERCT_GNO,
+    baseDecimals: 18,
+    quoteDecimals: 6,
+    kind: 'escrow',
+    source_channel: '40',
+    dest_channel: '1',
+    metadata: '0x',
+    via: 'gno-direct',
+  },
+  {
+    src: 'gnoland',
+    dest: 'ethereum',
+    denom: WRAPPED_ERCT_GNO,
+    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
+    baseToken: WRAPPED_ERCT_GNO,
+    quoteToken: ERCT_SEPOLIA,
+    baseDecimals: 6,
+    quoteDecimals: 18,
+    kind: 'unescrow',
+    source_channel: '1',
+    dest_channel: '40',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -89,6 +155,9 @@ const routes: BridgeRoute[] = [
     chain_id: 'atomone-1',
     baseToken: 'uatone',
     quoteToken: 'uatone',
+    baseDecimals: 6,
+    quoteDecimals: 6,
+    kind: 'escrow',
     source_channel: '0',
     dest_channel: '0',
     metadata: '0x',
