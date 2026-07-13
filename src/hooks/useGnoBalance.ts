@@ -4,6 +4,7 @@ import AuthStore from 'store/AuthStore'
 
 import { WhiteListType, BalanceListType } from 'types/asset'
 import { resolveGnoNetwork } from 'consts/gnoNetworks'
+import { GNO_ZKGM_REALM_PATH } from 'packages/union/gno-zkgm-constants'
 
 // Mirrors @gnolang/tm2-js-client's `getBalance`: POST a JSON-RPC envelope
 // with method `abci_query` and path `bank/balances/{addr}`. The GET form
@@ -50,6 +51,12 @@ const parseCoinAmount = (coinList: string, denom: string): string => {
   return '0'
 }
 
+// Wrapped tokens created via a Gno<-Eth zkgm INITIALIZE (e.g. ERCT's gno-side
+// representation) aren't a standalone GRC20 realm - they're a "voucher"
+// balance tracked inside the zkgm realm itself, keyed by this ibc/... denom.
+// Checked before isGrc20PkgPath below since the denom also contains a '/'.
+const isVoucherDenom = (token: string): boolean => token.startsWith('ibc/')
+
 // GRC20 tokens are identified by their realm package path (e.g.
 // 'gno.land/r/g1jg8.../grct'), which always contains a '/'. Native coin
 // denoms (ugnot, wugnot) never do, so this is enough to route each whiteList
@@ -57,7 +64,8 @@ const parseCoinAmount = (coinList: string, denom: string): string => {
 // several symbols behind one pkgpath) register each token under grc20reg
 // using fqname's '<pkgPath>.<symbol>' key, since BalanceOf there takes the
 // symbol as an extra argument; single-token realms take just the address.
-const isGrc20PkgPath = (token: string): boolean => token.includes('/')
+const isGrc20PkgPath = (token: string): boolean =>
+  !isVoucherDenom(token) && token.includes('/')
 
 // Splits a grc20reg-style '<pkgPath>.<symbol>' key back into its parts. The
 // dot must be looked for after the last '/' — pkgPath itself always
@@ -116,6 +124,49 @@ const fetchGrc20Balance = async (
   return match ? match[0] : '0'
 }
 
+// Reads a voucher balance via the zkgm realm's VoucherBalanceOf function
+// using `vm/qeval`, same wire format as fetchGrc20Balance (POST form - the
+// GET `/abci_query?path=...` form is unreliable on Gno.land nodes).
+const fetchVoucherBalance = async (
+  rpc: string,
+  denom: string,
+  address: string
+): Promise<string> => {
+  if (!address) return '0'
+  const url = rpc.replace(/\/$/, '')
+  const expression = `VoucherBalanceOf("${denom}", "${address}")`
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      id: Date.now(),
+      method: 'abci_query',
+      params: [
+        'vm/qeval',
+        btoa(`${GNO_ZKGM_REALM_PATH}.${expression}`),
+        '0',
+        false,
+      ],
+    }),
+  })
+  if (!res.ok) {
+    throw new Error(`Gno.land RPC ${res.status}`)
+  }
+
+  const json = await res.json()
+  const encoded: string | undefined = json?.result?.response?.ResponseBase?.Data
+  if (!encoded) return '0'
+
+  // qeval renders results in Gno's repl syntax, e.g. '(1000000 int64)' -
+  // pull the digits out rather than assuming the whole decoded body is a
+  // bare number.
+  const decoded = atob(encoded).trim()
+  const match = decoded.match(/\d+/)
+  return match ? match[0] : '0'
+}
+
 const useGnoBalance = (): {
   getGnoBalances: ({
     whiteList,
@@ -158,8 +209,11 @@ const useGnoBalance = (): {
       whiteList,
     })
 
-    const nativeDenoms = whiteList.filter((token) => !isGrc20PkgPath(token))
+    const nativeDenoms = whiteList.filter(
+      (token) => !isVoucherDenom(token) && !isGrc20PkgPath(token)
+    )
     const grc20Tokens = whiteList.filter((token) => isGrc20PkgPath(token))
+    const voucherTokens = whiteList.filter(isVoucherDenom)
 
     try {
       const coinList = await fetchCoinList(rpc, userAddress)
@@ -179,8 +233,25 @@ const useGnoBalance = (): {
       grc20Tokens.map(async (token) => {
         try {
           list[token] = await fetchGrc20Balance(rpc, token, userAddress)
+          console.log('[gno-balance] grc20 received', { rpc, token, balance: list[token] })
         } catch (e) {
           console.error('Failed to fetch GRC20 balance:', e, {
+            rpc,
+            chainId,
+            token,
+          })
+          list[token] = '0'
+        }
+      })
+    )
+
+    await Promise.all(
+      voucherTokens.map(async (token) => {
+        try {
+          list[token] = await fetchVoucherBalance(rpc, token, userAddress)
+          console.log('[gno-balance] voucher received', { rpc, token, balance: list[token] })
+        } catch (e) {
+          console.error('Failed to fetch voucher balance:', e, {
             rpc,
             chainId,
             token,

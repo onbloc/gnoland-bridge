@@ -13,6 +13,12 @@ export type BridgeRoute = {
   chain_id: string
   baseToken: string
   quoteToken: string
+  // Raw on-chain decimals for baseToken/quoteToken respectively. Usually
+  // equal (ugnot/wugnot and grct/wgrct both wrap 1:1 at 6 decimals), but not
+  // guaranteed - ERCT's 18-decimal EVM ERC20 is rescaled to a 6-decimal
+  // voucher on gno, so its two sides genuinely differ.
+  baseDecimals: number
+  quoteDecimals: number
   source_channel: string
   dest_channel: string
   metadata: string
@@ -47,6 +53,8 @@ const routes: BridgeRoute[] = [
     chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
     baseToken: 'ugnot',
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
+    baseDecimals: 6,
+    quoteDecimals: 6,
     source_channel: '1',
     dest_channel: '40',
     metadata: '0x',
@@ -59,6 +67,8 @@ const routes: BridgeRoute[] = [
     chain_id: '11155111',
     baseToken: WRAPPED_UGNOT_SEPOLIA,
     quoteToken: 'ugnot',
+    baseDecimals: 6,
+    quoteDecimals: 6,
     source_channel: '40',
     dest_channel: '1',
     metadata: '0x',
@@ -71,6 +81,8 @@ const routes: BridgeRoute[] = [
     chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
     baseToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
     quoteToken: WRAPPED_GRCT_SEPOLIA,
+    baseDecimals: 6,
+    quoteDecimals: 6,
     source_channel: '1',
     dest_channel: '40',
     metadata: '0x',
@@ -83,6 +95,8 @@ const routes: BridgeRoute[] = [
     chain_id: '11155111',
     baseToken: WRAPPED_GRCT_SEPOLIA,
     quoteToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
+    baseDecimals: 6,
+    quoteDecimals: 6,
     source_channel: '40',
     dest_channel: '1',
     metadata: '0x',
@@ -97,10 +111,12 @@ const routes: BridgeRoute[] = [
   {
     src: 'ethereum',
     dest: 'gnoland',
-    denom: 'erctoken',
+    denom: WRAPPED_ERCT_GNO,
     chain_id: '11155111',
     baseToken: ERCT_SEPOLIA,
     quoteToken: WRAPPED_ERCT_GNO,
+    baseDecimals: 18,
+    quoteDecimals: 6,
     source_channel: '40',
     dest_channel: '1',
     metadata: '0x',
@@ -109,10 +125,12 @@ const routes: BridgeRoute[] = [
   {
     src: 'gnoland',
     dest: 'ethereum',
-    denom: 'erctoken',
+    denom: WRAPPED_ERCT_GNO,
     chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
     baseToken: WRAPPED_ERCT_GNO,
     quoteToken: ERCT_SEPOLIA,
+    baseDecimals: 6,
+    quoteDecimals: 18,
     source_channel: '1',
     dest_channel: '40',
     metadata: '0x',
@@ -129,6 +147,8 @@ const routes: BridgeRoute[] = [
     chain_id: 'atomone-1',
     baseToken: 'uatone',
     quoteToken: 'uatone',
+    baseDecimals: 6,
+    quoteDecimals: 6,
     source_channel: '0',
     dest_channel: '0',
     metadata: '0x',

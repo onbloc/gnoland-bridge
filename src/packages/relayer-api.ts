@@ -146,9 +146,6 @@ export const getRelayerChainName = (chainId: string): string =>
 const DENOM_TO_SYMBOL = new Map<string, string>(
   SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.symbol])
 )
-const DENOM_TO_DECIMALS = new Map<string, number>(
-  SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.decimals])
-)
 
 // Resolves a relayer-reported token - a gno denom, or an 0x EVM address - to
 // the AssetDenomEnum value it represents. EVM-side tokens appear as their
@@ -180,18 +177,19 @@ export const getRelayerTransferTokenSymbol = (
   transfer: RelayerTransfer
 ): string => getRelayerTokenSymbol(transfer.base_token)
 
-// base_amount is a raw value denominated in transfer.base_token - the token
-// that actually left its origin chain - so its decimals (not the
-// destination side's) determine the correct human-readable scale. This
-// matters once source and destination decimals differ, e.g. an 18-decimal
-// EVM ERC20 (ERCT) wrapped as a 6-decimal gno denom.
+// base_amount is a raw value denominated in transfer.base_token - the exact
+// token that left its origin chain - so its own decimals (routes.ts'
+// baseDecimals, not a canonical per-asset value) determine the correct
+// human-readable scale. This matters once a token's two sides differ, e.g.
+// an 18-decimal EVM ERC20 (ERCT) wrapped as a 6-decimal gno voucher: the
+// same logical asset needs 18 for an eth->gno transfer's base_amount and 6
+// for a gno->eth one.
 export const getRelayerTransferBaseDecimals = (
   transfer: RelayerTransfer
 ): number => {
-  const denom = resolveTokenDenom(transfer.base_token)
-  const decimals =
-    denom !== undefined ? DENOM_TO_DECIMALS.get(denom) : undefined
-  return decimals ?? 6
+  const normalized = transfer.base_token.toLowerCase()
+  const route = routes.find((r) => r.baseToken.toLowerCase() === normalized)
+  return route?.baseDecimals ?? 6
 }
 
 export const getRelayerTransferAmountValue = (

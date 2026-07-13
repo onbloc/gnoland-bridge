@@ -54,13 +54,12 @@ const Finish = (): ReactElement => {
 
   const failed = !!displayErrorMessage
 
-  const erc20Address = (() => {
-    if (!displayAsset) return undefined
-    const route = routes.find(
-      (r) => r.src === 'gnoland' && r.baseToken === displayAsset.denom,
-    )
-    return route?.quoteToken
-  })()
+  const erc20Route = displayAsset
+    ? routes.find(
+        (r) => r.src === 'gnoland' && r.baseToken === displayAsset.denom,
+      )
+    : undefined
+  const erc20Address = erc20Route?.quoteToken
 
   const canAddToWallet =
     !failed &&
@@ -95,7 +94,11 @@ const Finish = (): ReactElement => {
           options: {
             address: erc20Address,
             symbol: displayAsset.symbol,
-            decimals: displayAsset.decimals,
+            // The ERC20 being registered is the destination-side wrapped
+            // token (erc20Route.quoteToken), which can have different
+            // decimals than displayAsset (source-chain-relative - see
+            // useAsset.ts's getAssetList).
+            decimals: erc20Route?.quoteDecimals ?? displayAsset.decimals,
           },
         },
       })

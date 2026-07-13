@@ -20,6 +20,7 @@ const useAsset = (): {
 } => {
   const asset = useRecoilValue(SendStore.asset)
   const setAsset = useSetRecoilState(SendStore.asset)
+  const assetList = useRecoilValue(ContractStore.assetList)
   const setAssetList = useSetRecoilState(ContractStore.assetList)
   const fromBlockChain = useRecoilValue(SendStore.fromBlockChain)
   const toBlockChain = useRecoilValue(SendStore.toBlockChain)
@@ -33,14 +34,21 @@ const useAsset = (): {
     // Filter the asset list per source chain. routes.ts is the source of truth
     // for which denoms can legitimately leave a given chain; SUPPORTED_ASSETS
     // is a superset (ugnot leaves gno, wugnot leaves ethereum).
-    const allowedDenoms = new Set(
-      routes
-        .filter((r) => r.src.toLowerCase() === fromBlockChain.toLowerCase())
-        .map((r) => r.denom)
+    const routesFromChain = routes.filter(
+      (r) => r.src.toLowerCase() === fromBlockChain.toLowerCase()
     )
+    const allowedDenoms = new Set(routesFromChain.map((r) => r.denom))
+    // baseToken/baseDecimals describe the token as held on `r.src` - i.e.
+    // fromBlockChain - so this is the correct decimals for the raw balance
+    // we're about to fetch, which can differ from SUPPORTED_ASSETS' static
+    // decimals when a token's two sides aren't 1:1 (e.g. ERCT: 18 on its
+    // native EVM ERC20, rescaled to 6 in its gno voucher).
     const visibleAssets = SUPPORTED_ASSETS.filter((a) =>
       allowedDenoms.has(a.denom)
-    )
+    ).map((a) => {
+      const route = routesFromChain.find((r) => r.denom === a.denom)
+      return route ? { ...a, decimals: route.baseDecimals } : a
+    })
 
     let updatedAssets: AssetType[] = visibleAssets.map((a) => ({
       ...a,
@@ -96,7 +104,12 @@ const useAsset = (): {
   const getDecimals = (coin?: string): number => {
     const denom = coin || asset?.denom
     if (denom) {
-      const decimals = ASSET_DECIMALS[denom as keyof typeof ASSET_DECIMALS]
+      // Prefer the current (route-resolved) list entry over the static
+      // SUPPORTED_ASSETS table, since a token's decimals can depend on
+      // which chain it's currently being held/sent from (see getAssetList).
+      const decimals =
+        assetList.find((a) => a.denom === denom)?.decimals ??
+        ASSET_DECIMALS[denom as keyof typeof ASSET_DECIMALS]
       if (decimals !== undefined) {
         return Math.pow(10, decimals)
       }

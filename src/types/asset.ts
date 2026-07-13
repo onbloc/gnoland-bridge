@@ -3,10 +3,11 @@ export enum AssetDenomEnum {
   wugnot = 'wugnot',
   grct = 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
   wgrct = 'wgrct',
-  // ERCT originates on Ethereum (base ERC20), wrapped as a GRC20 on gno.
-  // Deploy/init happens out-of-band via script; only the config below is
-  // wired here. No send path yet - see consts/routes.ts.
-  erctoken = 'erctoken',
+  // ERCT originates on Ethereum (base ERC20); the value here is its wrapped
+  // voucher denom on gno (tracked by the zkgm realm, not a standalone GRC20
+  // realm) - mirrors grct/ugnot in always being the gno-side identifier.
+  // No send path yet - see consts/routes.ts.
+  erctoken = 'ibc/ab48a434e034509a65fc52a24388c05f628dcc15',
   // AtomOne is selectable but not wired to any balance fetch or send path yet
   // (see consts/routes.ts) - balance always displays as 0.
   uatone = 'uatone',
