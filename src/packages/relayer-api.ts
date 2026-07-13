@@ -146,16 +146,17 @@ export const getRelayerChainName = (chainId: string): string =>
 const DENOM_TO_SYMBOL = new Map<string, string>(
   SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.symbol])
 )
+const DENOM_TO_DECIMALS = new Map<string, number>(
+  SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.decimals])
+)
 
-export const getRelayerTokenSymbol = (token: string): string => {
-  // Native coins and GRC20 realm paths appear on the relayer as their gno
-  // denom, matching an AssetDenomEnum value directly.
-  const directSymbol = DENOM_TO_SYMBOL.get(token)
-  if (directSymbol) return directSymbol
+// Resolves a relayer-reported token - a gno denom, or an 0x EVM address - to
+// the AssetDenomEnum value it represents. EVM-side tokens appear as their
+// ERC20 address instead of a denom, so they're resolved via routes.ts
+// (baseToken/quoteToken) back to the gno denom they pair with.
+const resolveTokenDenom = (token: string): string | undefined => {
+  if (DENOM_TO_SYMBOL.has(token)) return token
 
-  // EVM-side wrapped tokens appear as their ERC20 address instead - resolve
-  // via routes.ts (baseToken/quoteToken) back to the gno denom they pair
-  // with, then to that denom's display symbol.
   const normalized = token.toLowerCase()
   if (normalized.startsWith('0x')) {
     const route = routes.find(
@@ -163,25 +164,44 @@ export const getRelayerTokenSymbol = (token: string): string => {
         r.baseToken.toLowerCase() === normalized ||
         r.quoteToken.toLowerCase() === normalized
     )
-    const symbol = route && DENOM_TO_SYMBOL.get(route.denom)
-    if (symbol) return symbol
+    if (route) return route.denom
   }
 
-  return token.toUpperCase()
+  return undefined
+}
+
+export const getRelayerTokenSymbol = (token: string): string => {
+  const denom = resolveTokenDenom(token)
+  const symbol = denom !== undefined ? DENOM_TO_SYMBOL.get(denom) : undefined
+  return symbol ?? token.toUpperCase()
 }
 
 export const getRelayerTransferTokenSymbol = (
   transfer: RelayerTransfer
 ): string => getRelayerTokenSymbol(transfer.base_token)
 
+// base_amount is a raw value denominated in transfer.base_token - the token
+// that actually left its origin chain - so its decimals (not the
+// destination side's) determine the correct human-readable scale. This
+// matters once source and destination decimals differ, e.g. an 18-decimal
+// EVM ERC20 (ERCT) wrapped as a 6-decimal gno denom.
+export const getRelayerTransferBaseDecimals = (
+  transfer: RelayerTransfer
+): number => {
+  const denom = resolveTokenDenom(transfer.base_token)
+  const decimals =
+    denom !== undefined ? DENOM_TO_DECIMALS.get(denom) : undefined
+  return decimals ?? 6
+}
+
 export const getRelayerTransferAmountValue = (
   transfer: RelayerTransfer,
-  decimals = 6
+  decimals = getRelayerTransferBaseDecimals(transfer)
 ): number => Number(transfer.base_amount) / Math.pow(10, decimals)
 
 export const getRelayerTransferAmount = (
   transfer: RelayerTransfer,
-  decimals = 6
+  decimals = getRelayerTransferBaseDecimals(transfer)
 ): string => {
   const amount = getRelayerTransferAmountValue(transfer, decimals)
   if (!Number.isFinite(amount)) return '-'
