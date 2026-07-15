@@ -26,7 +26,7 @@ export interface ActivityItem {
 
 const STATUS_LABEL: Record<ActivityStatus, string> = {
   idle: 'Ready',
-  pending: 'Pending',
+  pending: 'Processing',
   success: 'Done',
   failed: 'Failed',
 }
@@ -326,10 +326,11 @@ const YourActivity = ({
                       <span className="dot" />
                       {STATUS_LABEL[item.status]}
                     </span>
-                    <span className="activity-row__chev" aria-hidden="true">
-                      {openId === item.id ? '⌃' : '⌄'}
-                    </span>
                   </div>
+
+                  <span className="activity-row__chev" aria-hidden="true">
+                    {openId === item.id ? '⌃' : '⌄'}
+                  </span>
                 </button>
 
                 {openId === item.id && (
