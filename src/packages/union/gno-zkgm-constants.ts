@@ -52,7 +52,7 @@ export const GNO_INIT_DEFAULT_BASE_AMOUNT = '1000000'
 // token in `consts/routes.ts`.
 export const WRAPPED_UGNOT_SEPOLIA =
   (import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA as string | undefined) ||
-  '0x7fF60639D3e44c9d45034D6978d76a337E8AA38B'
+  '0xCea4C0B7dFDE555c16907557e345EBD591Ea9699'
 export const GNO_INIT_DEFAULT_QUOTE_TOKEN = WRAPPED_UGNOT_SEPOLIA
 export const GNO_INIT_RAW_OPERAND_HEX = ''
 

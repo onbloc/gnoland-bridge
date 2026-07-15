@@ -34,7 +34,7 @@ export type BridgeRoute = {
 // channel 40 (gno ch 1).
 const WRAPPED_GRCT_SEPOLIA =
   import.meta.env.VITE_WRAPPED_GRCT_SEPOLIA ||
-  '0x2B11dF653B0A5B91864274662464D323117084Ee'
+  '0x74D5150257D5c3E0b900685db1755683dFA2b29b'
 
 // ERCT (ERCToken) - base ERC20 lives on Ethereum this time; the wrapped
 // representation on gno is an IBC-hash denom produced by the separate init
@@ -62,7 +62,7 @@ const routes: BridgeRoute[] = [
     quoteDecimals: 6,
     kind: 'escrow',
     source_channel: '1',
-    dest_channel: '40',
+    dest_channel: '42',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -76,7 +76,7 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'unescrow',
-    source_channel: '40',
+    source_channel: '42',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -92,7 +92,7 @@ const routes: BridgeRoute[] = [
     quoteDecimals: 6,
     kind: 'escrow',
     source_channel: '1',
-    dest_channel: '40',
+    dest_channel: '42',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -106,7 +106,7 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'unescrow',
-    source_channel: '40',
+    source_channel: '42',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -124,7 +124,7 @@ const routes: BridgeRoute[] = [
     baseDecimals: 18,
     quoteDecimals: 6,
     kind: 'escrow',
-    source_channel: '40',
+    source_channel: '42',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -140,7 +140,7 @@ const routes: BridgeRoute[] = [
     quoteDecimals: 18,
     kind: 'unescrow',
     source_channel: '1',
-    dest_channel: '40',
+    dest_channel: '42',
     metadata: '0x',
     via: 'gno-direct',
   },
