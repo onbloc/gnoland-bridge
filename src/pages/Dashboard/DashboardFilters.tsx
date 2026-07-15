@@ -36,6 +36,7 @@ const DashboardFilters = ({
       <option value="GNOT">GNOT</option>
       <option value="GRCT">GRCT</option>
       <option value="ERCT">ERCT</option>
+      <option value="USDT">USDT</option>
     </select>
 
     <select

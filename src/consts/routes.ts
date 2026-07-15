@@ -31,7 +31,7 @@ export type BridgeRoute = {
 }
 
 // Wrapped GRCT (gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct), created via a Gno->Eth INITIALIZE for
-// channel 40 (gno ch 1).
+// channel 42 (gno ch 1).
 const WRAPPED_GRCT_SEPOLIA =
   import.meta.env.VITE_WRAPPED_GRCT_SEPOLIA ||
   '0x74D5150257D5c3E0b900685db1755683dFA2b29b'
@@ -45,6 +45,16 @@ const ERCT_SEPOLIA =
 const WRAPPED_ERCT_GNO =
   import.meta.env.VITE_WRAPPED_ERCT_GNO ||
   'ibc/ab48a434e034509a65fc52a24388c05f628dcc15'
+
+// USDT - existing USDT already deployed on Sepolia (not a fresh deployment
+// like ERCT above). Wrapped voucher denom on gno created via a separate init
+// script, not through this frontend (mirrors ERCT above).
+const USDT_SEPOLIA =
+  import.meta.env.VITE_USDT_SEPOLIA ||
+  '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
+const WRAPPED_USDT_GNO =
+  import.meta.env.VITE_WRAPPED_USDT_GNO ||
+  'ibc/8908315ff52040c1cb74d0573c5f9e58de598971'
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
@@ -138,6 +148,40 @@ const routes: BridgeRoute[] = [
     quoteToken: ERCT_SEPOLIA,
     baseDecimals: 6,
     quoteDecimals: 18,
+    kind: 'unescrow',
+    source_channel: '1',
+    dest_channel: '42',
+    metadata: '0x',
+    via: 'gno-direct',
+  },
+  // USDT: base ERC20 already on Ethereum (existing Sepolia USDT), wrapped
+  // voucher on gno (same shape as the ERCT pair above) - eth->gno leg is
+  // 'escrow' (lock USDT, mint voucher), gno->eth leg is 'unescrow' (burn
+  // voucher, release USDT).
+  {
+    src: 'ethereum',
+    dest: 'gnoland',
+    denom: WRAPPED_USDT_GNO,
+    chain_id: '11155111',
+    baseToken: USDT_SEPOLIA,
+    quoteToken: WRAPPED_USDT_GNO,
+    baseDecimals: 6,
+    quoteDecimals: 6,
+    kind: 'escrow',
+    source_channel: '42',
+    dest_channel: '1',
+    metadata: '0x',
+    via: 'gno-direct',
+  },
+  {
+    src: 'gnoland',
+    dest: 'ethereum',
+    denom: WRAPPED_USDT_GNO,
+    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
+    baseToken: WRAPPED_USDT_GNO,
+    quoteToken: USDT_SEPOLIA,
+    baseDecimals: 6,
+    quoteDecimals: 6,
     kind: 'unescrow',
     source_channel: '1',
     dest_channel: '42',

@@ -9,6 +9,7 @@ const symbolOfDenom: Record<AssetDenomEnum, AssetSymbolEnum> = {
   [AssetDenomEnum.grct]: AssetSymbolEnum.GRCT,
   [AssetDenomEnum.wgrct]: AssetSymbolEnum.wGRCT,
   [AssetDenomEnum.erctoken]: AssetSymbolEnum.ERCT,
+  [AssetDenomEnum.usdt]: AssetSymbolEnum.USDT,
   [AssetDenomEnum.uatone]: AssetSymbolEnum.ATONE,
 }
 
