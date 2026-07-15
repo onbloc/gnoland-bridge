@@ -15,6 +15,10 @@
     {
       "source": "/relayer-api/:path*",
       "destination": "https://voyager-api.bridge.onbloc.xyz/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
