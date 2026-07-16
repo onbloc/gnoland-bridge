@@ -8,6 +8,11 @@ export enum AssetDenomEnum {
   // realm) - mirrors grct/ugnot in always being the gno-side identifier.
   // No send path yet - see consts/routes.ts.
   erctoken = 'ibc/ab48a434e034509a65fc52a24388c05f628dcc15',
+  // USDT originates on Ethereum (existing Sepolia USDT deployment, not a
+  // fresh one - see consts/routes.ts USDT_SEPOLIA). The value here is its
+  // wrapped voucher denom on gno (tracked by the zkgm realm, not a
+  // standalone GRC20 realm) - mirrors erctoken above.
+  usdt = 'ibc/8908315ff52040c1cb74d0573c5f9e58de598971',
   // AtomOne is selectable but not wired to any balance fetch or send path yet
   // (see consts/routes.ts) - balance always displays as 0.
   uatone = 'uatone',
@@ -19,6 +24,7 @@ export enum AssetSymbolEnum {
   GRCT = 'GRCT',
   wGRCT = 'wGRCT',
   ERCT = 'ERCT',
+  USDT = 'USDT',
   ATONE = 'ATONE',
 }
 
@@ -28,6 +34,7 @@ export const ASSET_DECIMALS: Record<AssetDenomEnum, number> = {
   [AssetDenomEnum.grct]: 6,
   [AssetDenomEnum.wgrct]: 6,
   [AssetDenomEnum.erctoken]: 18,
+  [AssetDenomEnum.usdt]: 6,
   [AssetDenomEnum.uatone]: 6,
 }
 
@@ -48,6 +55,7 @@ import gnotSvg from 'images/gnot.svg'
 import grctSvg from 'images/grct.svg'
 import atomoneSvg from 'images/atomone.svg'
 import ethereumSvg from 'images/ethereum.svg'
+import usdtSvg from 'images/usdt.svg'
 
 export const SUPPORTED_ASSETS: AssetType[] = [
   {
@@ -85,6 +93,13 @@ export const SUPPORTED_ASSETS: AssetType[] = [
     name: 'ERCToken',
     logoURI: ethereumSvg,
     decimals: 18,
+  },
+  {
+    symbol: AssetSymbolEnum.USDT,
+    denom: AssetDenomEnum.usdt,
+    name: 'Tether USD',
+    logoURI: usdtSvg,
+    decimals: 6,
   },
   {
     symbol: AssetSymbolEnum.ATONE,
