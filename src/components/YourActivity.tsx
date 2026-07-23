@@ -1,7 +1,7 @@
 import { ReactElement, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-export type ActivityStatus = 'idle' | 'pending' | 'success' | 'failed'
+export type ActivityStatus = 'idle' | 'processing' | 'success' | 'failed'
 export type ActivityStage = 0 | 1 | 2 | 3
 
 export interface ActivityItem {
@@ -26,14 +26,14 @@ export interface ActivityItem {
 
 const STATUS_LABEL: Record<ActivityStatus, string> = {
   idle: 'Ready',
-  pending: 'Pending',
+  processing: 'Processing',
   success: 'Done',
   failed: 'Failed',
 }
 
 const STATUS_CLASS: Record<ActivityStatus, string> = {
   idle: '',
-  pending: ' tag--pending',
+  processing: ' tag--pending',
   success: ' tag--success',
   failed: ' tag--fail',
 }
@@ -250,17 +250,33 @@ const YourActivity = ({
   error?: string
   emptyText?: string
 }): ReactElement => {
-  const [openId, setOpenId] = useState<string | null>(null)
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!items.length) {
-      setOpenId(null)
+      setOpenIds(new Set())
       return
     }
-    setOpenId((current) =>
-      current && items.some((item) => item.id === current) ? current : null
-    )
+    setOpenIds((current) => {
+      const validIds = new Set(items.map((item) => item.id))
+      const next = new Set(
+        [...current].filter((id) => validIds.has(id))
+      )
+      return next.size === current.size ? current : next
+    })
   }, [items])
+
+  const toggleOpen = (id: string): void => {
+    setOpenIds((current) => {
+      const next = new Set(current)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
+      return next
+    })
+  }
 
   return (
     <aside className="activity-card" aria-label="Your activity">
@@ -290,12 +306,8 @@ const YourActivity = ({
                 <button
                   type="button"
                   className="activity-row activity-row--button"
-                  onClick={() =>
-                    setOpenId((current) =>
-                      current === item.id ? null : item.id
-                    )
-                  }
-                  aria-expanded={openId === item.id}
+                  onClick={() => toggleOpen(item.id)}
+                  aria-expanded={openIds.has(item.id)}
                 >
                   <div className="activity-row__route">
                     <span className="activity-row__chains">
@@ -327,12 +339,12 @@ const YourActivity = ({
                       {STATUS_LABEL[item.status]}
                     </span>
                     <span className="activity-row__chev" aria-hidden="true">
-                      {openId === item.id ? '⌃' : '⌄'}
+                      {openIds.has(item.id) ? '⌃' : '⌄'}
                     </span>
                   </div>
                 </button>
 
-                {openId === item.id && (
+                {openIds.has(item.id) && (
                   <div className="activity-row__detail">
                     <div className="activity-row__addrs-block">
                       <div className="activity-row__addrs-row">

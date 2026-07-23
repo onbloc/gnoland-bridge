@@ -27,7 +27,7 @@ dayjs.extend(relativeTime)
 const statusToActivityStatus = (status: number): ActivityStatus => {
   if (status === 2) return 'success'
   if (status === 3) return 'failed'
-  return 'pending'
+  return 'processing'
 }
 
 const toActivityItem = (
