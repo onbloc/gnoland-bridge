@@ -18,6 +18,26 @@ import AssetList from './AssetList'
 import AutoFillButton from './AutoFillButton'
 import CopyTokenAddress from './CopyTokenAddress'
 
+// Bridge txs revert (and refund) once the on-chain amount exceeds 18 total
+// digits or carries more than 6 decimal places, so the input must never be
+// allowed to produce a value outside that shape in the first place.
+const AMOUNT_MAX_TOTAL_DIGITS = 18
+const AMOUNT_MAX_DECIMAL_PLACES = 6
+
+const isValidAmountInput = (value: string): boolean => {
+  if (value === '') return true
+  if (!/^\d*\.?\d*$/.test(value)) return false
+
+  const [integerPart, decimalPart = ''] = value.split('.')
+
+  if (decimalPart.length > AMOUNT_MAX_DECIMAL_PLACES) return false
+  if (integerPart.length + decimalPart.length > AMOUNT_MAX_TOTAL_DIGITS) {
+    return false
+  }
+
+  return true
+}
+
 const RefreshButton = (): ReactElement => {
   const isLoggedIn = useRecoilValue(AuthStore.isLoggedIn)
   const { getAssetList } = useAsset()
@@ -90,6 +110,9 @@ const SendForm = ({
     if (!value || value.length === 0) {
       setInputAmount('')
       setAmount('')
+      return
+    }
+    if (!isValidAmountInput(value)) {
       return
     }
     if (!isNaN(Number(value))) {
