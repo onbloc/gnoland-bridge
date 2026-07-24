@@ -9,6 +9,7 @@ import SendStore from 'store/SendStore'
 import { WhiteListType, BalanceListType } from 'types/asset'
 import { isEvmChain } from 'types/network'
 import { pickEvmChain } from 'packages/union/evm-chains'
+import { isNativeEvmToken } from 'packages/union/gno-zkgm-constants'
 
 const useEtherBaseBalance = (): {
   getEtherBalances: ({
@@ -38,12 +39,16 @@ const useEtherBaseBalance = (): {
     await Promise.all(
       whiteList.map(async (token) => {
         try {
-          const balance = await publicClient.readContract({
-            address: token as `0x${string}`,
-            abi: erc20Abi,
-            functionName: 'balanceOf',
-            args: [userAddress as `0x${string}`],
-          })
+          const balance = isNativeEvmToken(token)
+            ? await publicClient.getBalance({
+                address: userAddress as `0x${string}`,
+              })
+            : await publicClient.readContract({
+                address: token as `0x${string}`,
+                abi: erc20Abi,
+                functionName: 'balanceOf',
+                args: [userAddress as `0x${string}`],
+              })
           list[token] = balance.toString()
         } catch (e) {
           console.error(`Failed to fetch balance for ${token}:`, e)

@@ -1,4 +1,5 @@
 import {
+  NATIVE_TOKEN_ERC_7528_ADDRESS,
   TokenOrderKind,
   WRAPPED_UGNOT_SEPOLIA,
 } from 'packages/union/gno-zkgm-constants'
@@ -55,6 +56,17 @@ const USDT_SEPOLIA =
 const WRAPPED_USDT_GNO =
   import.meta.env.VITE_WRAPPED_USDT_GNO ||
   'ibc/8908315ff52040c1cb74d0573c5f9e58de598971'
+
+// SepoliaETH - base token is the native EVM gas token (ETH), represented by
+// the ERC-7528 sentinel address (not a real ERC20 contract) - see
+// NATIVE_TOKEN_ERC_7528_ADDRESS. Wrapped voucher denom on gno created via a
+// separate init script, not through this frontend (mirrors ERCT/USDT
+// above). quoteDecimals follows the same 18->6 trim as ERCT's gno voucher
+// ledger (gno's voucher ledger is always scaled to 6) - confirm once the
+// gno-side wrap deployment is finalized.
+const WRAPPED_SETH_GNO =
+  import.meta.env.VITE_WRAPPED_SETH_GNO ||
+  'ibc/68d464459f3425d3ea7ecf40bb338bfd6fcf350e'
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
@@ -182,6 +194,40 @@ const routes: BridgeRoute[] = [
     quoteToken: USDT_SEPOLIA,
     baseDecimals: 6,
     quoteDecimals: 6,
+    kind: 'unescrow',
+    source_channel: '1',
+    dest_channel: '44',
+    metadata: '0x',
+    via: 'gno-direct',
+  },
+  // SepoliaETH: native ETH on Ethereum, wrapped voucher on gno (same shape
+  // as the ERCT/USDT pairs above) - eth->gno leg is 'escrow' (lock native
+  // ETH via msg.value, mint voucher), gno->eth leg is 'unescrow' (burn
+  // voucher, release native ETH back to the recipient).
+  {
+    src: 'ethereum',
+    dest: 'gnoland',
+    denom: WRAPPED_SETH_GNO,
+    chain_id: '11155111',
+    baseToken: NATIVE_TOKEN_ERC_7528_ADDRESS,
+    quoteToken: WRAPPED_SETH_GNO,
+    baseDecimals: 18,
+    quoteDecimals: 6,
+    kind: 'escrow',
+    source_channel: '44',
+    dest_channel: '1',
+    metadata: '0x',
+    via: 'gno-direct',
+  },
+  {
+    src: 'gnoland',
+    dest: 'ethereum',
+    denom: WRAPPED_SETH_GNO,
+    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
+    baseToken: WRAPPED_SETH_GNO,
+    quoteToken: NATIVE_TOKEN_ERC_7528_ADDRESS,
+    baseDecimals: 6,
+    quoteDecimals: 18,
     kind: 'unescrow',
     source_channel: '1',
     dest_channel: '44',

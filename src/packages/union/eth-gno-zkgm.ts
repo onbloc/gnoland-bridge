@@ -13,6 +13,7 @@ import { utf8ToHex } from './gno-abi'
 import { encodeTokenOrderV2Hex } from './gno-token-order'
 import {
   ETH_ZKGM_SEPOLIA_ADDRESS,
+  isNativeEvmToken,
   TOKEN_ORDER_KIND_ESCROW,
   TOKEN_ORDER_KIND_UNESCROW,
   TokenOrderKind,
@@ -249,7 +250,7 @@ export const makeEthToGnoDirectTransaction = async (
     preparedRequest: {
       to: ETH_ZKGM_SEPOLIA_ADDRESS,
       data,
-      value: 0n,
+      value: isNativeEvmToken(baseToken) ? amount : 0n,
     },
   }
 }
