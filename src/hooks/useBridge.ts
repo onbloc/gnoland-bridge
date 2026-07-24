@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { useRecoilValue } from 'recoil'
-import { erc20Abi, maxUint256 } from 'viem'
+import { erc20Abi } from 'viem'
 
 import { getEvmPublicClient } from 'config/wagmi'
 import { makeGnolandToEthTransaction } from 'packages/union/a1-eth-hook'
@@ -278,7 +278,7 @@ export default function useBridge(): UseBridgeReturn {
                 address: route.baseToken as `0x${string}`,
                 abi: erc20Abi,
                 functionName: 'approve',
-                args: [spender, maxUint256],
+                args: [spender, BigInt(amount)],
                 account: address as `0x${string}`,
                 chain: sepoliaChain,
               })
@@ -333,7 +333,7 @@ export default function useBridge(): UseBridgeReturn {
                 address: baseToken as `0x${string}`,
                 abi: erc20Abi,
                 functionName: 'approve',
-                args: [spender, maxUint256],
+                args: [spender, BigInt(amount)],
                 account: address as `0x${string}`,
                 chain,
               })
