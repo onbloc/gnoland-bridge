@@ -147,24 +147,22 @@ const DENOM_TO_SYMBOL = new Map<string, string>(
   SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.symbol])
 )
 
-// Resolves a relayer-reported token - a gno denom, or an 0x EVM address - to
-// the AssetDenomEnum value it represents. EVM-side tokens appear as their
-// ERC20 address instead of a denom, so they're resolved via routes.ts
-// (baseToken/quoteToken) back to the gno denom they pair with.
+// Resolves a relayer-reported token - a gno denom/pkgpath, or an 0x EVM
+// address - to the AssetDenomEnum value it represents. EVM-side tokens
+// appear as their ERC20 address instead of a denom, and gno-side GRC20
+// tokens can appear as a grc20reg-style '<pkgPath>.<symbol>' key that
+// differs from their AssetDenomEnum value - both are resolved via
+// routes.ts (baseToken/quoteToken) back to the gno denom they pair with.
 const resolveTokenDenom = (token: string): string | undefined => {
   if (DENOM_TO_SYMBOL.has(token)) return token
 
   const normalized = token.toLowerCase()
-  if (normalized.startsWith('0x')) {
-    const route = routes.find(
-      (r) =>
-        r.baseToken.toLowerCase() === normalized ||
-        r.quoteToken.toLowerCase() === normalized
-    )
-    if (route) return route.denom
-  }
-
-  return undefined
+  const route = routes.find(
+    (r) =>
+      r.baseToken.toLowerCase() === normalized ||
+      r.quoteToken.toLowerCase() === normalized
+  )
+  return route?.denom
 }
 
 export const getRelayerTokenSymbol = (token: string): string => {
