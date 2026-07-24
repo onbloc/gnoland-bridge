@@ -292,5 +292,9 @@ export const findMatchingWalletTransfer = async (
   params: RelayerListParams = { limit: 10 }
 ): Promise<RelayerTransfer | null> => {
   const { data } = await fetchWalletTransfers(args.address, params)
-  return data.find((transfer) => transferMatchesCurrent({ ...args, transfer })) ?? null
+  return (
+    (data ?? []).find((transfer) =>
+      transferMatchesCurrent({ ...args, transfer })
+    ) ?? null
+  )
 }
