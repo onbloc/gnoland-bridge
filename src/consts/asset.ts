@@ -11,6 +11,7 @@ const symbolOfDenom: Record<AssetDenomEnum, AssetSymbolEnum> = {
   [AssetDenomEnum.erctoken]: AssetSymbolEnum.ERCT,
   [AssetDenomEnum.usdt]: AssetSymbolEnum.USDT,
   [AssetDenomEnum.uatone]: AssetSymbolEnum.ATONE,
+  [AssetDenomEnum.eth]: AssetSymbolEnum.ETH,
 }
 
 export default {

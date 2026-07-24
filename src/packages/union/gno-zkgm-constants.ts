@@ -116,6 +116,17 @@ export const SEPOLIA_CHAIN_ID = 11155111
 
 export const GNO_NATIVE_DENOM = 'ugnot'
 
+// ERC-7528 sentinel address representing the native EVM gas token (ETH) in
+// Union ZKGM's TokenOrder encoding (evm/contracts/apps/ucs/03-zkgm/Lib.sol's
+// NATIVE_TOKEN_ERC_7528_ADDRESS in union-voyager) - not a real ERC20
+// contract, so allowance/approve and ERC20 balanceOf calls must be skipped
+// for it and the amount attached as msg.value instead.
+export const NATIVE_TOKEN_ERC_7528_ADDRESS =
+  '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE' as const
+
+export const isNativeEvmToken = (token: string): boolean =>
+  token.toLowerCase() === NATIVE_TOKEN_ERC_7528_ADDRESS.toLowerCase()
+
 // Map of canonical bridge baseToken keys to the Gno-side denom paid into
 // the `send` field. Populated as routes get wired.
 export const GNO_BASE_TOKEN_MAP: Record<string, string> = {

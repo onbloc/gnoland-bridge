@@ -16,6 +16,11 @@ export enum AssetDenomEnum {
   // AtomOne is selectable but not wired to any balance fetch or send path yet
   // (see consts/routes.ts) - balance always displays as 0.
   uatone = 'uatone',
+  // SepoliaETH originates on Ethereum as the native gas token (ERC-7528
+  // sentinel, not an ERC20 - see packages/union/gno-zkgm-constants.ts
+  // NATIVE_TOKEN_ERC_7528_ADDRESS). The value here is its wrapped voucher
+  // denom on gno (tracked by the zkgm realm) - mirrors erctoken/usdt above.
+  eth = 'ibc/68d464459f3425d3ea7ecf40bb338bfd6fcf350e',
 }
 
 export enum AssetSymbolEnum {
@@ -26,6 +31,7 @@ export enum AssetSymbolEnum {
   ERCT = 'ERCT',
   USDT = 'USDT',
   ATONE = 'ATONE',
+  ETH = 'ETH',
 }
 
 export const ASSET_DECIMALS: Record<AssetDenomEnum, number> = {
@@ -36,6 +42,7 @@ export const ASSET_DECIMALS: Record<AssetDenomEnum, number> = {
   [AssetDenomEnum.erctoken]: 18,
   [AssetDenomEnum.usdt]: 6,
   [AssetDenomEnum.uatone]: 6,
+  [AssetDenomEnum.eth]: 18,
 }
 
 export type AssetType = {
@@ -107,5 +114,12 @@ export const SUPPORTED_ASSETS: AssetType[] = [
     name: 'AtomOne',
     logoURI: atomoneSvg,
     decimals: 6,
+  },
+  {
+    symbol: AssetSymbolEnum.ETH,
+    denom: AssetDenomEnum.eth,
+    name: 'Sepolia Ethereum',
+    logoURI: ethereumSvg,
+    decimals: 18,
   },
 ]

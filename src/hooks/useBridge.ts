@@ -13,7 +13,10 @@ import {
   fetchPacketHashFromTx,
   queryChannelState,
 } from 'packages/union/gno-zkgm-abci'
-import { GNO_DIRECT_ZKGM_ENABLED } from 'packages/union/gno-zkgm-constants'
+import {
+  GNO_DIRECT_ZKGM_ENABLED,
+  isNativeEvmToken,
+} from 'packages/union/gno-zkgm-constants'
 import { GnoDirectTxResult } from 'packages/union/gno-zkgm-types'
 import routes from 'consts/routes'
 import AuthStore from 'store/AuthStore'
@@ -267,24 +270,28 @@ export default function useBridge(): UseBridgeReturn {
 
             const publicClient = getEvmPublicClient(sepoliaChain.id)
             const spender = directTx.preparedRequest.to
-            const allowance = await publicClient.readContract({
-              address: route.baseToken as `0x${string}`,
-              abi: erc20Abi,
-              functionName: 'allowance',
-              args: [address as `0x${string}`, spender],
-            })
-            if (allowance < BigInt(amount)) {
-              const approveTxHash = await walletClient.writeContract({
+            // Native assets (e.g. SepoliaETH) are attached via msg.value, not
+            // ERC20 transferFrom, so there's no allowance to check or approve.
+            if (!isNativeEvmToken(route.baseToken)) {
+              const allowance = await publicClient.readContract({
                 address: route.baseToken as `0x${string}`,
                 abi: erc20Abi,
-                functionName: 'approve',
-                args: [spender, BigInt(amount)],
-                account: address as `0x${string}`,
-                chain: sepoliaChain,
+                functionName: 'allowance',
+                args: [address as `0x${string}`, spender],
               })
-              await publicClient.waitForTransactionReceipt({
-                hash: approveTxHash,
-              })
+              if (allowance < BigInt(amount)) {
+                const approveTxHash = await walletClient.writeContract({
+                  address: route.baseToken as `0x${string}`,
+                  abi: erc20Abi,
+                  functionName: 'approve',
+                  args: [spender, BigInt(amount)],
+                  account: address as `0x${string}`,
+                  chain: sepoliaChain,
+                })
+                await publicClient.waitForTransactionReceipt({
+                  hash: approveTxHash,
+                })
+              }
             }
 
             const txHash = await walletClient.sendTransaction({
@@ -314,8 +321,10 @@ export default function useBridge(): UseBridgeReturn {
             amount
           )
 
-          // ERC20 approval: spender is the UCS03 ZKGM contract on the EVM chain
-          if (baseToken.startsWith('0x')) {
+          // ERC20 approval: spender is the UCS03 ZKGM contract on the EVM
+          // chain. Native assets (e.g. SepoliaETH) are attached via
+          // msg.value instead, so they're excluded here.
+          if (baseToken.startsWith('0x') && !isNativeEvmToken(baseToken)) {
             const spender = (memo as Record<string, unknown>)
               .to as `0x${string}`
             const chain = pickEvmChain(evmNetwork?.chainId)
