@@ -31,10 +31,10 @@ export type BridgeRoute = {
 }
 
 // Wrapped GRCT (gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct), created via a Gno->Eth INITIALIZE for
-// channel 42 (gno ch 1).
+// channel 44 (gno ch 1).
 const WRAPPED_GRCT_SEPOLIA =
   import.meta.env.VITE_WRAPPED_GRCT_SEPOLIA ||
-  '0x74D5150257D5c3E0b900685db1755683dFA2b29b'
+  '0xE53Fc439c64F1Cb0e9466a3Fdf0d2500Dc0Ee6E5'
 
 // ERCT (ERCToken) - base ERC20 lives on Ethereum this time; the wrapped
 // representation on gno is an IBC-hash denom produced by the separate init
@@ -44,7 +44,7 @@ const ERCT_SEPOLIA =
   '0x3128D525320aa5C07b1cef3d413DA0299f03946E'
 const WRAPPED_ERCT_GNO =
   import.meta.env.VITE_WRAPPED_ERCT_GNO ||
-  'ibc/ab48a434e034509a65fc52a24388c05f628dcc15'
+  'ibc/ab48a434e034509a65fc52a24388c05f628dcc15'  
 
 // USDT - existing USDT already deployed on Sepolia (not a fresh deployment
 // like ERCT above). Wrapped voucher denom on gno created via a separate init
@@ -72,7 +72,7 @@ const routes: BridgeRoute[] = [
     quoteDecimals: 6,
     kind: 'escrow',
     source_channel: '1',
-    dest_channel: '42',
+    dest_channel: '44',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -86,7 +86,7 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'unescrow',
-    source_channel: '42',
+    source_channel: '44',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -96,13 +96,13 @@ const routes: BridgeRoute[] = [
     dest: 'ethereum',
     denom: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
     chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
-    baseToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
+    baseToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct.grct',
     quoteToken: WRAPPED_GRCT_SEPOLIA,
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'escrow',
     source_channel: '1',
-    dest_channel: '42',
+    dest_channel: '44',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -112,11 +112,11 @@ const routes: BridgeRoute[] = [
     denom: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
     chain_id: '11155111',
     baseToken: WRAPPED_GRCT_SEPOLIA,
-    quoteToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
+    quoteToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct.grct',
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'unescrow',
-    source_channel: '42',
+    source_channel: '44',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -134,7 +134,7 @@ const routes: BridgeRoute[] = [
     baseDecimals: 18,
     quoteDecimals: 6,
     kind: 'escrow',
-    source_channel: '42',
+    source_channel: '44',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -150,7 +150,7 @@ const routes: BridgeRoute[] = [
     quoteDecimals: 18,
     kind: 'unescrow',
     source_channel: '1',
-    dest_channel: '42',
+    dest_channel: '44',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -168,7 +168,7 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'escrow',
-    source_channel: '42',
+    source_channel: '44',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -184,7 +184,7 @@ const routes: BridgeRoute[] = [
     quoteDecimals: 6,
     kind: 'unescrow',
     source_channel: '1',
-    dest_channel: '42',
+    dest_channel: '44',
     metadata: '0x',
     via: 'gno-direct',
   },

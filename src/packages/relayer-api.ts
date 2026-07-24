@@ -147,30 +147,40 @@ const DENOM_TO_SYMBOL = new Map<string, string>(
   SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.symbol])
 )
 
-// Resolves a relayer-reported token - a gno denom, or an 0x EVM address - to
-// the AssetDenomEnum value it represents. EVM-side tokens appear as their
-// ERC20 address instead of a denom, so they're resolved via routes.ts
-// (baseToken/quoteToken) back to the gno denom they pair with.
+// Resolves a relayer-reported token - a gno denom/pkgpath, or an 0x EVM
+// address - to the AssetDenomEnum value it represents. EVM-side tokens
+// appear as their ERC20 address instead of a denom, and gno-side GRC20
+// tokens can appear as a grc20reg-style '<pkgPath>.<symbol>' key that
+// differs from their AssetDenomEnum value - both are resolved via
+// routes.ts (baseToken/quoteToken) back to the gno denom they pair with.
 const resolveTokenDenom = (token: string): string | undefined => {
   if (DENOM_TO_SYMBOL.has(token)) return token
 
   const normalized = token.toLowerCase()
-  if (normalized.startsWith('0x')) {
-    const route = routes.find(
-      (r) =>
-        r.baseToken.toLowerCase() === normalized ||
-        r.quoteToken.toLowerCase() === normalized
-    )
-    if (route) return route.denom
-  }
+  const route = routes.find(
+    (r) =>
+      r.baseToken.toLowerCase() === normalized ||
+      r.quoteToken.toLowerCase() === normalized
+  )
+  return route?.denom
+}
 
-  return undefined
+// gno-side GRC20 tokens registered under a multi-symbol factory realm report
+// as a grc20reg-style '<pkgPath>.<symbol>' key (same convention parsed by
+// parseGrc20Token in useGnoBalance.ts) - the segment after the last '/' 's
+// dot IS the symbol, so it can be read directly without depending on
+// routes.ts staying in sync with the on-chain address.
+const symbolFromGrc20Key = (token: string): string | undefined => {
+  const lastSlash = token.lastIndexOf('/')
+  if (lastSlash === -1) return undefined
+  const dotIndex = token.indexOf('.', lastSlash + 1)
+  return dotIndex === -1 ? undefined : token.slice(dotIndex + 1).toUpperCase()
 }
 
 export const getRelayerTokenSymbol = (token: string): string => {
   const denom = resolveTokenDenom(token)
   const symbol = denom !== undefined ? DENOM_TO_SYMBOL.get(denom) : undefined
-  return symbol ?? token.toUpperCase()
+  return symbol ?? symbolFromGrc20Key(token) ?? token.toUpperCase()
 }
 
 export const getRelayerTransferTokenSymbol = (
