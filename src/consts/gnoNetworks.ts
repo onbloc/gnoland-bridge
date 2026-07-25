@@ -34,7 +34,7 @@ export const GNO_NETWORKS = {
     id: 'topaz',
     default: true,
     main: false,
-    chainId: 'topaz',
+    chainId: 'topaz-1',
     chainName: 'topaz',
     networkId: 'topaz',
     networkName: 'Topaz',

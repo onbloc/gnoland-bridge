@@ -8,7 +8,7 @@ export const RELAYER_API_BASE_URL = (
 ).replace(/\/$/, '')
 
 export const RELAYER_CHAIN_IDS = {
-  gnoland: 'topaz',
+  gnoland: 'topaz-1',
   ethereum: '11155111',
 } as const
 
@@ -16,7 +16,7 @@ export const RELAYER_CHAIN_DISPLAY: Record<
   string,
   { name: string; color: string }
 > = {
-  [RELAYER_CHAIN_IDS.gnoland]: { name: 'Gno.land', color: '#175D38' },
+  [RELAYER_CHAIN_IDS.gnoland]: { name: 'GNO.LAND', color: '#175D38' },
   [RELAYER_CHAIN_IDS.ethereum]: { name: 'Ethereum', color: '#627EEA' },
 }
 
