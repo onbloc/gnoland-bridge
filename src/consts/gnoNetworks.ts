@@ -34,7 +34,7 @@ export const GNO_NETWORKS = {
     id: 'topaz',
     default: true,
     main: false,
-    chainId: 'topaz',
+    chainId: 'topaz-1',
     chainName: 'topaz',
     networkId: 'topaz',
     networkName: 'Topaz',
@@ -44,21 +44,6 @@ export const GNO_NETWORKS = {
     gnoUrl: 'https://topaz.testnets.gno.land/',
     apiUrl: '',
     linkUrl: 'https://gnoscan.io',
-  },
-  dev: {
-    id: 'dev',
-    default: true,
-    main: false,
-    chainId: 'dev.ibc',
-    chainName: 'Gno-IBC-DEV',
-    networkId: 'dev.ibc',
-    networkName: 'IBC Devnet',
-    addressPrefix: 'g',
-    rpcUrl: 'https://rpc.bridge.onbloc.xyz/',
-    indexerUrl: '',
-    gnoUrl: 'http://127.0.0.1:8888',
-    apiUrl: '',
-    linkUrl: 'http://127.0.0.1:3000',
   },
 } satisfies Record<string, GnoNetwork>
 
@@ -74,24 +59,16 @@ export type BridgeNetworkOption = {
   helperText: string
 }
 
-export const DEFAULT_GNO_NETWORK = GNO_NETWORKS.dev
+export const DEFAULT_GNO_NETWORK = GNO_NETWORKS.topaz
 
 export const BRIDGE_NETWORK_OPTIONS: BridgeNetworkOption[] = [
-  {
-    id: 'dev',
-    label: 'Gno-IBC-DEV',
-    gnoNetworkId: 'dev',
-    evmChainId: 11155111,
-    supported: true,
-    helperText: 'dev.ibc',
-  },
   {
     id: 'topaz',
     label: 'Topaz',
     gnoNetworkId: 'topaz',
     evmChainId: 11155111,
-    supported: false,
-    helperText: 'To be supported',
+    supported: true,
+    helperText: 'topaz',
   },
   {
     id: 'gnoland1',
@@ -103,7 +80,7 @@ export const BRIDGE_NETWORK_OPTIONS: BridgeNetworkOption[] = [
   },
 ]
 
-export const DEFAULT_BRIDGE_NETWORK_MODE: BridgeNetworkMode = 'dev'
+export const DEFAULT_BRIDGE_NETWORK_MODE: BridgeNetworkMode = 'topaz'
 
 export const resolveBridgeNetworkOption = (
   mode?: BridgeNetworkMode

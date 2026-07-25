@@ -31,22 +31,6 @@ export type BridgeRoute = {
   via?: BridgeVia
 }
 
-// Wrapped GRCT (gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct), created via a Gno->Eth INITIALIZE for
-// channel 44 (gno ch 1).
-const WRAPPED_GRCT_SEPOLIA =
-  import.meta.env.VITE_WRAPPED_GRCT_SEPOLIA ||
-  '0xE53Fc439c64F1Cb0e9466a3Fdf0d2500Dc0Ee6E5'
-
-// ERCT (ERCToken) - base ERC20 lives on Ethereum this time; the wrapped
-// representation on gno is an IBC-hash denom produced by the separate init
-// script, not through this frontend.
-const ERCT_SEPOLIA =
-  import.meta.env.VITE_ERCT_SEPOLIA ||
-  '0x3128D525320aa5C07b1cef3d413DA0299f03946E'
-const WRAPPED_ERCT_GNO =
-  import.meta.env.VITE_WRAPPED_ERCT_GNO ||
-  'ibc/ab48a434e034509a65fc52a24388c05f628dcc15'  
-
 // USDT - existing USDT already deployed on Sepolia (not a fresh deployment
 // like ERCT above). Wrapped voucher denom on gno created via a separate init
 // script, not through this frontend (mirrors ERCT above).
@@ -77,14 +61,14 @@ const routes: BridgeRoute[] = [
     src: 'gnoland',
     dest: 'ethereum',
     denom: 'ugnot',
-    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
+    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'topaz-1',
     baseToken: 'ugnot',
     quoteToken: WRAPPED_UGNOT_SEPOLIA,
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'escrow',
     source_channel: '1',
-    dest_channel: '44',
+    dest_channel: '45',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -98,71 +82,8 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'unescrow',
-    source_channel: '44',
+    source_channel: '45',
     dest_channel: '1',
-    metadata: '0x',
-    via: 'gno-direct',
-  },
-  {
-    src: 'gnoland',
-    dest: 'ethereum',
-    denom: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
-    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
-    baseToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct.grct',
-    quoteToken: WRAPPED_GRCT_SEPOLIA,
-    baseDecimals: 6,
-    quoteDecimals: 6,
-    kind: 'escrow',
-    source_channel: '1',
-    dest_channel: '44',
-    metadata: '0x',
-    via: 'gno-direct',
-  },
-  {
-    src: 'ethereum',
-    dest: 'gnoland',
-    denom: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct',
-    chain_id: '11155111',
-    baseToken: WRAPPED_GRCT_SEPOLIA,
-    quoteToken: 'gno.land/r/g1jg8mtutu9khhfwc4nxmuhcpftf0pajdhfvsqf5/grct.grct',
-    baseDecimals: 6,
-    quoteDecimals: 6,
-    kind: 'unescrow',
-    source_channel: '44',
-    dest_channel: '1',
-    metadata: '0x',
-    via: 'gno-direct',
-  },
-  // ERCT: base ERC20 on Ethereum, wrapped voucher on gno (reverse of the
-  // GRCT pair above) - eth->gno leg is 'escrow' (lock ERCT, mint voucher),
-  // gno->eth leg is 'unescrow' (burn voucher, release ERCT).
-  {
-    src: 'ethereum',
-    dest: 'gnoland',
-    denom: WRAPPED_ERCT_GNO,
-    chain_id: '11155111',
-    baseToken: ERCT_SEPOLIA,
-    quoteToken: WRAPPED_ERCT_GNO,
-    baseDecimals: 18,
-    quoteDecimals: 6,
-    kind: 'escrow',
-    source_channel: '44',
-    dest_channel: '1',
-    metadata: '0x',
-    via: 'gno-direct',
-  },
-  {
-    src: 'gnoland',
-    dest: 'ethereum',
-    denom: WRAPPED_ERCT_GNO,
-    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
-    baseToken: WRAPPED_ERCT_GNO,
-    quoteToken: ERCT_SEPOLIA,
-    baseDecimals: 6,
-    quoteDecimals: 18,
-    kind: 'unescrow',
-    source_channel: '1',
-    dest_channel: '44',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -180,7 +101,7 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'escrow',
-    source_channel: '44',
+    source_channel: '45',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -189,14 +110,14 @@ const routes: BridgeRoute[] = [
     src: 'gnoland',
     dest: 'ethereum',
     denom: WRAPPED_USDT_GNO,
-    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
+    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'topaz-1',
     baseToken: WRAPPED_USDT_GNO,
     quoteToken: USDT_SEPOLIA,
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'unescrow',
     source_channel: '1',
-    dest_channel: '44',
+    dest_channel: '45',
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -214,7 +135,7 @@ const routes: BridgeRoute[] = [
     baseDecimals: 18,
     quoteDecimals: 6,
     kind: 'escrow',
-    source_channel: '44',
+    source_channel: '45',
     dest_channel: '1',
     metadata: '0x',
     via: 'gno-direct',
@@ -223,14 +144,14 @@ const routes: BridgeRoute[] = [
     src: 'gnoland',
     dest: 'ethereum',
     denom: WRAPPED_SETH_GNO,
-    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'dev.ibc',
+    chain_id: import.meta.env.VITE_GNO_CHAIN_ID || 'topaz-1',
     baseToken: WRAPPED_SETH_GNO,
     quoteToken: NATIVE_TOKEN_ERC_7528_ADDRESS,
     baseDecimals: 6,
     quoteDecimals: 18,
     kind: 'unescrow',
     source_channel: '1',
-    dest_channel: '44',
+    dest_channel: '45',
     metadata: '0x',
     via: 'gno-direct',
   },

@@ -8,7 +8,7 @@ export const RELAYER_API_BASE_URL = (
 ).replace(/\/$/, '')
 
 export const RELAYER_CHAIN_IDS = {
-  gnoland: 'dev.ibc',
+  gnoland: 'topaz-1',
   ethereum: '11155111',
 } as const
 
@@ -16,7 +16,7 @@ export const RELAYER_CHAIN_DISPLAY: Record<
   string,
   { name: string; color: string }
 > = {
-  [RELAYER_CHAIN_IDS.gnoland]: { name: 'Gno.land', color: '#175D38' },
+  [RELAYER_CHAIN_IDS.gnoland]: { name: 'GNO.LAND', color: '#175D38' },
   [RELAYER_CHAIN_IDS.ethereum]: { name: 'Ethereum', color: '#627EEA' },
 }
 
@@ -87,7 +87,7 @@ export const getRelayerStatusUrl = (packetHash: string): string =>
   buildUrl(`/status/${encodeURIComponent(packetHash)}`)
 
 // Outbound legs (EVM chains) use 0x-prefixed hashes -> Etherscan. Everything
-// else is a Gno-side tx hash -> the gnoscan build pointed at the dev.ibc RPC.
+// else is a Gno-side tx hash -> the gnoscan build pointed at the gno RPC.
 const SEPOLIA_EXPLORER_TX_URL = 'https://sepolia.etherscan.io/tx/'
 
 export const getTxExplorerUrl = (hash: string): string =>

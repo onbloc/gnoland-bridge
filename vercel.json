@@ -2,19 +2,19 @@
   "rewrites": [
     {
       "source": "/gno-rpc",
-      "destination": "https://rpc.bridge.onbloc.xyz/"
+      "destination": "https://topaz.rpc.onbloc.xyz/"
     },
     {
       "source": "/gno-rpc/:path*",
-      "destination": "https://rpc.bridge.onbloc.xyz/:path*"
+      "destination": "https://topaz.rpc.onbloc.xyz/:path*"
     },
     {
       "source": "/relayer-api",
-      "destination": "https://voyager-api.bridge.onbloc.xyz/"
+      "destination": "https://voyager-api.onbloc.xyz/"
     },
     {
       "source": "/relayer-api/:path*",
-      "destination": "https://voyager-api.bridge.onbloc.xyz/:path*"
+      "destination": "https://voyager-api.onbloc.xyz/:path*"
     },
     {
       "source": "/(.*)",
