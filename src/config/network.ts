@@ -1,6 +1,6 @@
 export const GNOSCAN_URL = 'https://gnoscan.io'
 
-export const GNO_RPC_URL = import.meta.env.VITE_GNO_RPC_URL || 'https://rpc.bridge.onbloc.xyz'
+export const GNO_RPC_URL = import.meta.env.VITE_GNO_RPC_URL || 'https://topaz.rpc.onbloc.xyz'
 
 export const makeGnoscanTransactionUrl = (txHash: string): string => {
   const params = new URLSearchParams({
