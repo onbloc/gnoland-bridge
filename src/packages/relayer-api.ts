@@ -86,8 +86,8 @@ const fetchJson = async <T>(url: string): Promise<T> => {
 export const getRelayerStatusUrl = (packetHash: string): string =>
   buildUrl(`/status/${encodeURIComponent(packetHash)}`)
 
-// Outbound legs (EVM chains) use 0x-prefixed hashes -> Etherscan. Everything
-// else is a Gno-side tx hash -> the gnoscan build pointed at the gno RPC.
+// 0x-prefixed hashes are EVM txs -> Etherscan; everything else is a Gno tx
+// hash -> gnoscan.
 const SEPOLIA_EXPLORER_TX_URL = 'https://sepolia.etherscan.io/tx/'
 
 export const getTxExplorerUrl = (hash: string): string =>
@@ -100,10 +100,9 @@ export const fetchWalletTransfers = (
   params: RelayerListParams = {}
 ): Promise<RelayerListResponse> =>
   fetchJson<RelayerListResponse>(
-    // The relayer backend matches EVM addresses as exact (case-sensitive)
-    // strings, lowercase only. wagmi/viem always return EIP-55 checksummed
-    // (mixed-case) addresses, so an unmodified lookup silently 404s/empties.
-    // Gno bech32 addresses are already lowercase, so this is a no-op for them.
+    // Relayer matches EVM addresses as exact lowercase strings, but
+    // wagmi/viem return checksummed (mixed-case) addresses - lowercase here
+    // to avoid silent 404s/empties. No-op for Gno bech32 addresses.
     buildUrl(`/wallet/${encodeURIComponent(address.toLowerCase())}`, {
       orderby: params.orderby ?? 'desc',
       limit: params.limit ?? 20,
@@ -147,12 +146,8 @@ const DENOM_TO_SYMBOL = new Map<string, string>(
   SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.symbol])
 )
 
-// Resolves a relayer-reported token - a gno denom/pkgpath, or an 0x EVM
-// address - to the AssetDenomEnum value it represents. EVM-side tokens
-// appear as their ERC20 address instead of a denom, and gno-side GRC20
-// tokens can appear as a grc20reg-style '<pkgPath>.<symbol>' key that
-// differs from their AssetDenomEnum value - both are resolved via
-// routes.ts (baseToken/quoteToken) back to the gno denom they pair with.
+// Resolves a relayer-reported token (gno denom/pkgpath, or 0x EVM address)
+// to its AssetDenomEnum value via routes.ts's baseToken/quoteToken pairing.
 const resolveTokenDenom = (token: string): string | undefined => {
   if (DENOM_TO_SYMBOL.has(token)) return token
 
@@ -165,11 +160,9 @@ const resolveTokenDenom = (token: string): string | undefined => {
   return route?.denom
 }
 
-// gno-side GRC20 tokens registered under a multi-symbol factory realm report
-// as a grc20reg-style '<pkgPath>.<symbol>' key (same convention parsed by
-// parseGrc20Token in useGnoBalance.ts) - the segment after the last '/' 's
-// dot IS the symbol, so it can be read directly without depending on
-// routes.ts staying in sync with the on-chain address.
+// Multi-symbol GRC20 factory tokens report as a grc20reg '<pkgPath>.<symbol>'
+// key (same convention as parseGrc20Token in useGnoBalance.ts) - the symbol
+// is the segment after the last '/'s dot.
 const symbolFromGrc20Key = (token: string): string | undefined => {
   const lastSlash = token.lastIndexOf('/')
   if (lastSlash === -1) return undefined
@@ -187,14 +180,11 @@ export const getRelayerTransferTokenSymbol = (
   transfer: RelayerTransfer
 ): string => getRelayerTokenSymbol(transfer.base_token)
 
-// base_amount is a wire-level value, always expressed at the higher of the
-// two sides' decimals (the true origin's precision) regardless of which
-// direction the transfer runs - confirmed against gno-ibc's own
-// token_send_voucher_with_decimal_trim_filetest.gno: even a gno->eth voucher
-// burn re-encodes its wire amount at the origin's full precision (e.g. 18
-// for ERCT), not gno's own 6-decimal ledger scale. Using just baseDecimals
-// here would be wrong for exactly that leg (ERCT gno->eth has
-// baseDecimals=6, quoteDecimals=18, but the wire amount is 18-scaled).
+// base_amount is always wire-scaled to the higher of the two sides'
+// decimals (the origin's true precision), regardless of transfer direction -
+// confirmed against gno-ibc's token_send_voucher_with_decimal_trim_filetest.gno.
+// baseDecimals alone would be wrong for legs like ERCT gno->eth
+// (baseDecimals=6, quoteDecimals=18, wire amount is 18-scaled).
 export const getRelayerTransferBaseDecimals = (
   transfer: RelayerTransfer
 ): number => {
@@ -244,11 +234,13 @@ export const isRelayerTransferTerminal = (transfer: RelayerTransfer): boolean =>
 const isSameAddress = (a?: string, b?: string): boolean =>
   !!a && !!b && a.toLowerCase() === b.toLowerCase()
 
-// Matches a wallet-transfers entry against the transfer currently being
-// tracked client-side. Falls back progressively because the client's
-// off-chain packetHash/txHash estimates can drift from what actually gets
-// indexed (see fetchPacketHashByTxHash above) - sender/receiver/amount/chain
-// still uniquely identifies the transfer even when both hash estimates miss.
+// Matches a wallet-transfers entry against the transfer being tracked
+// client-side. Falls back from packetHash/tx_out (which can drift from
+// what's actually indexed) to sender/receiver/amount/chain, but only
+// against non-terminal transfers - otherwise a finished past transfer with
+// the same sender/receiver/amount would match instead of the real,
+// not-yet-indexed one, showing the new send as falsely "done" with the old
+// transfer's tx links.
 export const transferMatchesCurrent = ({
   transfer,
   packetHash,
@@ -271,6 +263,7 @@ export const transferMatchesCurrent = ({
   if (packetHash && transfer.packet_hash === packetHash) return true
   if (txHash && transfer.tx_out === txHash) return true
   if (!senderAddress || !receiverAddress || !amount) return false
+  if (isRelayerTransferTerminal(transfer)) return false
   return (
     isSameAddress(transfer.from_address, senderAddress) &&
     isSameAddress(transfer.to_address, receiverAddress) &&
@@ -280,11 +273,9 @@ export const transferMatchesCurrent = ({
   )
 }
 
-// Finds the tracked transfer in a wallet's recent history using the same
-// progressive matching as transferMatchesCurrent (packetHash -> tx_out ->
-// sender/receiver/amount/chain). Used to keep polling resilient to a
-// drifted/wrong packetHash estimate instead of relying on a single direct
-// /status/{packetHash} lookup.
+// Finds the tracked transfer via transferMatchesCurrent's progressive
+// matching, so polling survives a drifted packetHash estimate instead of
+// relying on a single /status/{packetHash} lookup.
 export const findMatchingWalletTransfer = async (
   args: Omit<Parameters<typeof transferMatchesCurrent>[0], 'transfer'> & {
     address: string
