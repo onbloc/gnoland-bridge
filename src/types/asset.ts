@@ -20,7 +20,7 @@ export enum AssetDenomEnum {
   // sentinel, not an ERC20 - see packages/union/gno-zkgm-constants.ts
   // NATIVE_TOKEN_ERC_7528_ADDRESS). The value here is its wrapped voucher
   // denom on gno (tracked by the zkgm realm) - mirrors erctoken/usdt above.
-  eth = 'ibc/68d464459f3425d3ea7ecf40bb338bfd6fcf350e',
+  eth = 'ibc/8304388bbc79cdbb7557b156bb36c6c8517f12d9',
 }
 
 export enum AssetSymbolEnum {

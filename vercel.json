@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/gno-rpc",
-      "destination": "https://topaz.rpc.onbloc.xyz/"
+      "destination": "https://sapphire.rpc.onbloc.xyz/"
     },
     {
       "source": "/gno-rpc/:path*",
-      "destination": "https://topaz.rpc.onbloc.xyz/:path*"
+      "destination": "https://sapphire.rpc.onbloc.xyz/:path*"
     },
     {
       "source": "/relayer-api",

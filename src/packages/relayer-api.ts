@@ -8,7 +8,7 @@ export const RELAYER_API_BASE_URL = (
 ).replace(/\/$/, '')
 
 export const RELAYER_CHAIN_IDS = {
-  gnoland: 'topaz-1',
+  gnoland: 'sapphire-1',
   ethereum: '11155111',
 } as const
 
