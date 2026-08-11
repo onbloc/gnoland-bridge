@@ -52,13 +52,16 @@ const AssetItem = ({
     <button
       type="button"
       className="asset-row"
+      disabled={asset.disabled}
       style={{
         marginBottom: 2,
         border: 0,
         background: selected ? 'var(--bg-surface-1)' : 'transparent',
-        cursor: 'pointer',
+        cursor: asset.disabled ? 'not-allowed' : 'pointer',
+        opacity: asset.disabled ? 0.5 : 1,
       }}
       onClick={(): void => {
+        if (asset.disabled) return
         if (oriAsset !== asset) {
           onChangeAmount({ value: '' })
         }
@@ -71,7 +74,7 @@ const AssetItem = ({
         <div className="asset-row__name">{asset.symbol}</div>
         <div className="asset-row__sub">{asset.name}</div>
       </div>
-      {isLoggedIn && (
+      {isLoggedIn && !asset.disabled && (
         <div className="asset-row__balance">
           {asset.balance ? formatBalance(asset.balance, asset.denom) : '0'}
           <span className="sub">{asset.symbol}</span>

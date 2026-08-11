@@ -107,6 +107,9 @@ export const SUPPORTED_ASSETS: AssetType[] = [
     name: 'Tether USD',
     logoURI: usdtSvg,
     decimals: 6,
+    // Temporarily disabled - selectable in the UI (visible, not clickable)
+    // but blocked from being sent. Remove once re-enabled.
+    disabled: true,
   },
   {
     symbol: AssetSymbolEnum.ATONE,
