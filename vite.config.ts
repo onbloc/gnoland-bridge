@@ -21,7 +21,7 @@ export default defineConfig({
       // the gno-ibc devnet is plain HTTP, so client-side fetches would hit
       // a mixed-content block; routing through same-origin avoids it.
       '/gno-rpc': {
-        target: 'https://topaz.rpc.onbloc.xyz',
+        target: 'https://sapphire.rpc.onbloc.xyz',
         changeOrigin: true,
         rewrite: (p) => p.replace(/^\/gno-rpc/, ''),
       },

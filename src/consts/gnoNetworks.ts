@@ -30,18 +30,18 @@ export const GNO_NETWORKS = {
     apiUrl: 'https://gnoland1.api.onbloc.xyz',
     linkUrl: 'https://gnoscan.io',
   },
-  topaz: {
-    id: 'topaz',
+  sapphire: {
+    id: 'sapphire',
     default: true,
     main: false,
-    chainId: 'topaz-1',
-    chainName: 'topaz',
-    networkId: 'topaz',
-    networkName: 'Topaz',
+    chainId: 'sapphire-1',
+    chainName: 'sapphire',
+    networkId: 'sapphire',
+    networkName: 'Sapphire',
     addressPrefix: 'g',
-    rpcUrl: 'https://topaz.rpc.onbloc.xyz:443',
-    indexerUrl: 'https://indexer.topaz.gnoland.network:443',
-    gnoUrl: 'https://topaz.testnets.gno.land/',
+    rpcUrl: 'https://sapphire.rpc.onbloc.xyz:443',
+    indexerUrl: 'https://sapphire.indexer.onbloc.xyz:443',
+    gnoUrl: 'https://sapphire.testnets.gno.land/',
     apiUrl: '',
     linkUrl: 'https://gnoscan.io',
   },
@@ -59,16 +59,16 @@ export type BridgeNetworkOption = {
   helperText: string
 }
 
-export const DEFAULT_GNO_NETWORK = GNO_NETWORKS.topaz
+export const DEFAULT_GNO_NETWORK = GNO_NETWORKS.sapphire
 
 export const BRIDGE_NETWORK_OPTIONS: BridgeNetworkOption[] = [
   {
-    id: 'topaz',
-    label: 'Topaz',
-    gnoNetworkId: 'topaz',
+    id: 'sapphire',
+    label: 'Sapphire',
+    gnoNetworkId: 'sapphire',
     evmChainId: 11155111,
     supported: true,
-    helperText: 'topaz',
+    helperText: 'sapphire',
   },
   {
     id: 'gnoland1',
@@ -80,7 +80,7 @@ export const BRIDGE_NETWORK_OPTIONS: BridgeNetworkOption[] = [
   },
 ]
 
-export const DEFAULT_BRIDGE_NETWORK_MODE: BridgeNetworkMode = 'topaz'
+export const DEFAULT_BRIDGE_NETWORK_MODE: BridgeNetworkMode = 'sapphire'
 
 export const resolveBridgeNetworkOption = (
   mode?: BridgeNetworkMode
