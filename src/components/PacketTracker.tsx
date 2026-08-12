@@ -20,7 +20,7 @@ function StepSubtext({
   completedStep: number
   sourceTxUrl?: string
   destTxUrl?: string
-  failed?: boolean
+  failed: boolean
 }): ReactElement {
   if (stepIndex === 0 && sourceTxUrl) {
     return (
