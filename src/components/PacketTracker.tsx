@@ -14,11 +14,13 @@ function StepSubtext({
   completedStep,
   sourceTxUrl,
   destTxUrl,
+  failed,
 }: {
   stepIndex: number
   completedStep: number
   sourceTxUrl?: string
   destTxUrl?: string
+  failed: boolean
 }): ReactElement {
   if (stepIndex === 0 && sourceTxUrl) {
     return (
@@ -36,6 +38,22 @@ function StepSubtext({
     return (
       <span className="progress-step__sub progress-step__sub--muted">
         Complete
+      </span>
+    )
+  }
+  if (stepIndex === 2 && failed) {
+    return destTxUrl ? (
+      <a
+        href={destTxUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="progress-step__sub progress-step__sub--fail"
+      >
+        Failed ↗
+      </a>
+    ) : (
+      <span className="progress-step__sub progress-step__sub--fail">
+        Failed
       </span>
     )
   }
@@ -144,15 +162,13 @@ export default function PacketTracker({
 
   const destTxUrl = transfer?.tx_in ? getTxExplorerUrl(transfer.tx_in) : undefined
 
-  const failed = transfer?.status === 3
+  const status = transfer?.status
+  const failed = status === 3
+  // status 3 (failed) still means relaying (pickup) succeeded, so it renders
+  // like status 1 - Sent and Relayed done, Received left for the isFailed
+  // override below instead of showing as done or active.
   const completedStep =
-    transfer?.status === 2
-      ? 2
-      : transfer?.status === 1
-      ? 1
-      : transfer?.status === 0
-      ? 0
-      : -1
+    status === 2 ? 2 : status === 1 || status === 3 ? 1 : status === 0 ? 0 : -1
 
   // Line fill: 0% when nothing done, 50% after step 1, 100% when all done
   const lineFillPct =
@@ -181,18 +197,14 @@ export default function PacketTracker({
         </div>
         <div className="progress-track__steps">
           {STEP_LABELS.map((label, i) => {
+            // Received never reads as done/active on a failed transfer - it
+            // stays an empty circle, only its sub label turns red "Failed".
+            const isFailedStep = failed && i === 2
             const isDone = completedStep >= i
-            const isFailed = failed && i === 1 && !isDone
-            const isActive = !isDone && !isFailed && completedStep === i - 1
+            const isActive = !isFailedStep && completedStep === i - 1
             const cls =
               'progress-step' +
-              (isDone
-                ? ' is-done'
-                : isFailed
-                ? ' is-failed'
-                : isActive
-                ? ' is-active'
-                : '')
+              (isDone ? ' is-done' : isActive ? ' is-active' : '')
             return (
               <div key={label} className={cls}>
                 <div className="progress-step__dot">
@@ -208,18 +220,6 @@ export default function PacketTracker({
                       <path d="M20 6 9 17l-5-5" />
                     </svg>
                   )}
-                  {isFailed && (
-                    <svg
-                      width="8"
-                      height="8"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    >
-                      <path d="M18 6 6 18M6 6l12 12" />
-                    </svg>
-                  )}
                   {isActive && <span className="progress-step__pulse" />}
                 </div>
                 <span className="progress-step__label">{label}</span>
@@ -228,6 +228,7 @@ export default function PacketTracker({
                   completedStep={completedStep}
                   sourceTxUrl={sourceTxUrl}
                   destTxUrl={destTxUrl}
+                  failed={failed}
                 />
               </div>
             )

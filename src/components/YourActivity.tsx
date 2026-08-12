@@ -113,21 +113,18 @@ const ChainChip = ({
   </span>
 )
 
-// Mirrors PacketTracker's completedStep: stage 0 = Sent done/Relayed
-// pending, 1 = Relayed done/Received pending, 2 = all done. -1 (failed,
-// stage 3) intentionally excludes "Sent" from the completedStep check below
-// so it falls through to the index===0 special case instead.
+// Stage 3 (failed) still means relaying (pickup) succeeded, so it renders
+// like stage 1 - Sent and Relayed done, Received left for the failed-step
+// override below instead of showing as done or in-progress.
 const getCompletedStep = (stage: ActivityStage): number =>
-  stage === 2 ? 2 : stage === 1 ? 1 : stage === 0 ? 0 : -1
+  stage === 2 ? 2 : stage === 1 || stage === 3 ? 1 : 0
 
 const stepState = (
   completedStep: number,
-  stage: ActivityStage,
   index: number
-): 'done' | 'active' | 'failed' | 'waiting' => {
+): 'done' | 'active' | 'waiting' => {
   if (index === 0) return 'done'
   if (completedStep >= index) return 'done'
-  if (stage === 3 && index === 1) return 'failed'
   if (completedStep === index - 1) return 'active'
   return 'waiting'
 }
@@ -140,17 +137,14 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
     { label: 'Sent', sub: item.txHref ? 'VIEW TX' : 'SENT' },
     {
       label: 'Relayed',
-      sub:
-        completedStep >= 1
-          ? 'COMPLETE'
-          : item.stage === 3
-          ? 'FAILED'
-          : 'IN PROGRESS',
+      sub: completedStep >= 1 ? 'COMPLETE' : 'IN PROGRESS',
     },
     {
       label: 'Received',
       sub:
-        completedStep >= 2
+        item.stage === 3
+          ? 'FAILED'
+          : completedStep >= 2
           ? item.txInHref
             ? 'VIEW TX'
             : 'COMPLETE'
@@ -168,22 +162,24 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
       </div>
       <div className="progress-track__steps">
         {steps.map((step, index) => {
-          const state = stepState(completedStep, item.stage, index)
+          // Received never reads as done/active on a failed transfer - it
+          // stays an empty circle, only its sub label turns red "FAILED".
+          const isFailedStep = item.stage === 3 && index === 2
+          const state = isFailedStep
+            ? 'waiting'
+            : stepState(completedStep, index)
           const cls =
             'progress-step' +
             (state === 'done'
               ? ' is-done'
               : state === 'active'
               ? ' is-active'
-              : state === 'failed'
-              ? ' is-failed'
               : '')
-          const subCls =
-            state === 'failed'
-              ? 'progress-step__sub progress-step__sub--fail'
-              : state === 'active' || state === 'done'
-              ? 'progress-step__sub progress-step__sub--brand'
-              : 'progress-step__sub progress-step__sub--muted'
+          const subCls = isFailedStep
+            ? 'progress-step__sub progress-step__sub--fail'
+            : state === 'active' || state === 'done'
+            ? 'progress-step__sub progress-step__sub--brand'
+            : 'progress-step__sub progress-step__sub--muted'
           const stepHref =
             index === 0 ? item.txHref : index === 2 ? item.txInHref : undefined
 
@@ -204,18 +200,6 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
                 )}
                 {state === 'active' && (
                   <span className="progress-step__pulse" />
-                )}
-                {state === 'failed' && (
-                  <svg
-                    width="8"
-                    height="8"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <path d="M18 6 6 18M6 6l12 12" />
-                  </svg>
                 )}
               </div>
               <span className="progress-step__label">{step.label}</span>
