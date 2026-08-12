@@ -113,9 +113,11 @@ const ChainChip = ({
   </span>
 )
 
-// Stage 3 (failed) renders like done (2) - only the status tag says "Failed".
+// Stage 3 (failed) still means relaying (pickup) succeeded, so it renders
+// like stage 1 - Sent and Relayed done, Received left for the failed-step
+// override below instead of showing as done or in-progress.
 const getCompletedStep = (stage: ActivityStage): number =>
-  stage >= 2 ? 2 : stage === 1 ? 1 : 0
+  stage === 2 ? 2 : stage === 1 || stage === 3 ? 1 : 0
 
 const stepState = (
   completedStep: number,
@@ -140,7 +142,9 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
     {
       label: 'Received',
       sub:
-        completedStep >= 2
+        item.stage === 3
+          ? 'FAILED'
+          : completedStep >= 2
           ? item.txInHref
             ? 'VIEW TX'
             : 'COMPLETE'
@@ -158,7 +162,12 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
       </div>
       <div className="progress-track__steps">
         {steps.map((step, index) => {
-          const state = stepState(completedStep, index)
+          // Received never reads as done/active on a failed transfer - it
+          // stays an empty circle, only its sub label turns red "FAILED".
+          const isFailedStep = item.stage === 3 && index === 2
+          const state = isFailedStep
+            ? 'waiting'
+            : stepState(completedStep, index)
           const cls =
             'progress-step' +
             (state === 'done'
@@ -166,10 +175,11 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
               : state === 'active'
               ? ' is-active'
               : '')
-          const subCls =
-            state === 'active' || state === 'done'
-              ? 'progress-step__sub progress-step__sub--brand'
-              : 'progress-step__sub progress-step__sub--muted'
+          const subCls = isFailedStep
+            ? 'progress-step__sub progress-step__sub--fail'
+            : state === 'active' || state === 'done'
+            ? 'progress-step__sub progress-step__sub--brand'
+            : 'progress-step__sub progress-step__sub--muted'
           const stepHref =
             index === 0 ? item.txHref : index === 2 ? item.txInHref : undefined
 
