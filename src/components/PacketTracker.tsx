@@ -20,7 +20,7 @@ function StepSubtext({
   completedStep: number
   sourceTxUrl?: string
   destTxUrl?: string
-  failed?: boolean
+  failed: boolean
 }): ReactElement {
   if (stepIndex === 0 && sourceTxUrl) {
     return (
@@ -200,8 +200,8 @@ export default function PacketTracker({
             // Received never reads as done/active on a failed transfer - it
             // stays an empty circle, only its sub label turns red "Failed".
             const isFailedStep = failed && i === 2
-            const isDone = !isFailedStep && completedStep >= i
-            const isActive = !isDone && !isFailedStep && completedStep === i - 1
+            const isDone = completedStep >= i
+            const isActive = !isFailedStep && completedStep === i - 1
             const cls =
               'progress-step' +
               (isDone ? ' is-done' : isActive ? ' is-active' : '')
