@@ -1740,5 +1740,4 @@ main {
 }
 .progress-step__sub--muted { color: var(--text-tertiary); }
 .progress-step__sub--brand { color: var(--bg-brand); }
-.progress-step__sub--fail  { color: var(--g-color-red-500); }
 a.progress-step__sub:hover { text-decoration: underline; text-underline-offset: 3px; }

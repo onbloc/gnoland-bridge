@@ -145,8 +145,9 @@ export default function PacketTracker({
   const destTxUrl = transfer?.tx_in ? getTxExplorerUrl(transfer.tx_in) : undefined
 
   const failed = transfer?.status === 3
+  // status 3 (failed) renders like done (2) - only the banner above flags it.
   const completedStep =
-    transfer?.status === 2
+    transfer?.status === 2 || transfer?.status === 3
       ? 2
       : transfer?.status === 1
       ? 1
@@ -182,17 +183,10 @@ export default function PacketTracker({
         <div className="progress-track__steps">
           {STEP_LABELS.map((label, i) => {
             const isDone = completedStep >= i
-            const isFailed = failed && i === 1 && !isDone
-            const isActive = !isDone && !isFailed && completedStep === i - 1
+            const isActive = !isDone && completedStep === i - 1
             const cls =
               'progress-step' +
-              (isDone
-                ? ' is-done'
-                : isFailed
-                ? ' is-failed'
-                : isActive
-                ? ' is-active'
-                : '')
+              (isDone ? ' is-done' : isActive ? ' is-active' : '')
             return (
               <div key={label} className={cls}>
                 <div className="progress-step__dot">
@@ -206,18 +200,6 @@ export default function PacketTracker({
                       strokeWidth="3"
                     >
                       <path d="M20 6 9 17l-5-5" />
-                    </svg>
-                  )}
-                  {isFailed && (
-                    <svg
-                      width="8"
-                      height="8"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                    >
-                      <path d="M18 6 6 18M6 6l12 12" />
                     </svg>
                   )}
                   {isActive && <span className="progress-step__pulse" />}

@@ -113,21 +113,16 @@ const ChainChip = ({
   </span>
 )
 
-// Mirrors PacketTracker's completedStep: stage 0 = Sent done/Relayed
-// pending, 1 = Relayed done/Received pending, 2 = all done. -1 (failed,
-// stage 3) intentionally excludes "Sent" from the completedStep check below
-// so it falls through to the index===0 special case instead.
+// Stage 3 (failed) renders like done (2) - only the status tag says "Failed".
 const getCompletedStep = (stage: ActivityStage): number =>
-  stage === 2 ? 2 : stage === 1 ? 1 : stage === 0 ? 0 : -1
+  stage >= 2 ? 2 : stage === 1 ? 1 : 0
 
 const stepState = (
   completedStep: number,
-  stage: ActivityStage,
   index: number
-): 'done' | 'active' | 'failed' | 'waiting' => {
+): 'done' | 'active' | 'waiting' => {
   if (index === 0) return 'done'
   if (completedStep >= index) return 'done'
-  if (stage === 3 && index === 1) return 'failed'
   if (completedStep === index - 1) return 'active'
   return 'waiting'
 }
@@ -140,12 +135,7 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
     { label: 'Sent', sub: item.txHref ? 'VIEW TX' : 'SENT' },
     {
       label: 'Relayed',
-      sub:
-        completedStep >= 1
-          ? 'COMPLETE'
-          : item.stage === 3
-          ? 'FAILED'
-          : 'IN PROGRESS',
+      sub: completedStep >= 1 ? 'COMPLETE' : 'IN PROGRESS',
     },
     {
       label: 'Received',
@@ -168,20 +158,16 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
       </div>
       <div className="progress-track__steps">
         {steps.map((step, index) => {
-          const state = stepState(completedStep, item.stage, index)
+          const state = stepState(completedStep, index)
           const cls =
             'progress-step' +
             (state === 'done'
               ? ' is-done'
               : state === 'active'
               ? ' is-active'
-              : state === 'failed'
-              ? ' is-failed'
               : '')
           const subCls =
-            state === 'failed'
-              ? 'progress-step__sub progress-step__sub--fail'
-              : state === 'active' || state === 'done'
+            state === 'active' || state === 'done'
               ? 'progress-step__sub progress-step__sub--brand'
               : 'progress-step__sub progress-step__sub--muted'
           const stepHref =
@@ -204,18 +190,6 @@ const ProgressDetail = ({ item }: { item: ActivityItem }): ReactElement => {
                 )}
                 {state === 'active' && (
                   <span className="progress-step__pulse" />
-                )}
-                {state === 'failed' && (
-                  <svg
-                    width="8"
-                    height="8"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="3"
-                  >
-                    <path d="M18 6 6 18M6 6l12 12" />
-                  </svg>
                 )}
               </div>
               <span className="progress-step__label">{step.label}</span>
