@@ -34,8 +34,7 @@ const DashboardFilters = ({
     >
       <option value="all">All tokens</option>
       <option value="GNOT">GNOT</option>
-      <option value="GRCT">GRCT</option>
-      <option value="ERCT">ERCT</option>
+      <option value="ETH">ETH</option>
       <option value="USDT">USDT</option>
     </select>
 
