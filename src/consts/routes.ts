@@ -3,6 +3,7 @@ import {
   TokenOrderKind,
   WRAPPED_UGNOT_SEPOLIA,
 } from 'packages/union/gno-zkgm-constants'
+import { AssetDenomEnum } from 'types/asset'
 
 // 'osmosis-hook'  legacy 2-hop via Osmosis wasm-hook intermediary
 //                 (a1-eth-hook / eth-a1-hook). Default when unspecified.
@@ -38,8 +39,7 @@ const USDT_SEPOLIA =
   import.meta.env.VITE_USDT_SEPOLIA ||
   '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
 const WRAPPED_USDT_GNO =
-  import.meta.env.VITE_WRAPPED_USDT_GNO ||
-  'ibc/fd333f0cb130c75f22211c49ba5fa506e5714f2c'
+  import.meta.env.VITE_WRAPPED_USDT_GNO || AssetDenomEnum.usdt
 
 // SepoliaETH - base token is the native EVM gas token (ETH), represented by
 // the ERC-7528 sentinel address (not a real ERC20 contract) - see
@@ -49,13 +49,18 @@ const WRAPPED_USDT_GNO =
 // ledger (gno's voucher ledger is always scaled to 6) - confirm once the
 // gno-side wrap deployment is finalized.
 const WRAPPED_SETH_GNO =
-  import.meta.env.VITE_WRAPPED_SETH_GNO ||
-  'ibc/15886f3f641a8ee5c8de49e3c062ca44fa2aabe4'
+  import.meta.env.VITE_WRAPPED_SETH_GNO || AssetDenomEnum.eth
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
 // UNESCROW route burns wrapped-ugnot on Sepolia and releases ugnot back on
 // gno. Both directions must use the wrapped ERC20 created by INITIALIZE.
+//
+// Every gno-direct pair shares the same two IBC channel ids - only which
+// side is source vs dest flips with direction - so both are pulled out here
+// instead of repeating the literals (and risking drift) on every route.
+const GNO_CHANNEL_ID = '2'
+const GNO_IBC_COUNTERPARTY_CHANNEL_ID = '52'
 const routes: BridgeRoute[] = [
   {
     src: 'gnoland',
@@ -67,8 +72,8 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'escrow',
-    source_channel: '1',
-    dest_channel: '52',
+    source_channel: GNO_CHANNEL_ID,
+    dest_channel: GNO_IBC_COUNTERPARTY_CHANNEL_ID,
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -82,8 +87,8 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'unescrow',
-    source_channel: '52',
-    dest_channel: '1',
+    source_channel: GNO_IBC_COUNTERPARTY_CHANNEL_ID,
+    dest_channel: GNO_CHANNEL_ID,
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -101,8 +106,8 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'escrow',
-    source_channel: '52',
-    dest_channel: '1',
+    source_channel: GNO_IBC_COUNTERPARTY_CHANNEL_ID,
+    dest_channel: GNO_CHANNEL_ID,
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -116,8 +121,8 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 6,
     kind: 'unescrow',
-    source_channel: '1',
-    dest_channel: '52',
+    source_channel: GNO_CHANNEL_ID,
+    dest_channel: GNO_IBC_COUNTERPARTY_CHANNEL_ID,
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -135,8 +140,8 @@ const routes: BridgeRoute[] = [
     baseDecimals: 18,
     quoteDecimals: 6,
     kind: 'escrow',
-    source_channel: '52',
-    dest_channel: '1',
+    source_channel: GNO_IBC_COUNTERPARTY_CHANNEL_ID,
+    dest_channel: GNO_CHANNEL_ID,
     metadata: '0x',
     via: 'gno-direct',
   },
@@ -150,8 +155,8 @@ const routes: BridgeRoute[] = [
     baseDecimals: 6,
     quoteDecimals: 18,
     kind: 'unescrow',
-    source_channel: '1',
-    dest_channel: '52',
+    source_channel: GNO_CHANNEL_ID,
+    dest_channel: GNO_IBC_COUNTERPARTY_CHANNEL_ID,
     metadata: '0x',
     via: 'gno-direct',
   },
