@@ -12,7 +12,7 @@ export enum AssetDenomEnum {
   // fresh one - see consts/routes.ts USDT_SEPOLIA). The value here is its
   // wrapped voucher denom on gno (tracked by the zkgm realm, not a
   // standalone GRC20 realm) - mirrors erctoken above.
-  usdt = 'ibc/fd333f0cb130c75f22211c49ba5fa506e5714f2c',
+  usdt = 'ibc/8908315ff52040c1cb74d0573c5f9e58de598971',
   // AtomOne is selectable but not wired to any balance fetch or send path yet
   // (see consts/routes.ts) - balance always displays as 0.
   uatone = 'uatone',
@@ -20,7 +20,7 @@ export enum AssetDenomEnum {
   // sentinel, not an ERC20 - see packages/union/gno-zkgm-constants.ts
   // NATIVE_TOKEN_ERC_7528_ADDRESS). The value here is its wrapped voucher
   // denom on gno (tracked by the zkgm realm) - mirrors erctoken/usdt above.
-  eth = 'ibc/8ac2058b042ac196234c2bd7875e43aec867de4a',
+  eth = 'ibc/8304388bbc79cdbb7557b156bb36c6c8517f12d9',
 }
 
 export enum AssetSymbolEnum {

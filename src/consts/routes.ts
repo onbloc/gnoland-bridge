@@ -39,7 +39,7 @@ const USDT_SEPOLIA =
   '0x7169D38820dfd117C3FA1f22a697dBA58d90BA06'
 const WRAPPED_USDT_GNO =
   import.meta.env.VITE_WRAPPED_USDT_GNO ||
-  'ibc/fd333f0cb130c75f22211c49ba5fa506e5714f2c'
+  'ibc/8908315ff52040c1cb74d0573c5f9e58de598971'
 
 // SepoliaETH - base token is the native EVM gas token (ETH), represented by
 // the ERC-7528 sentinel address (not a real ERC20 contract) - see
@@ -50,7 +50,7 @@ const WRAPPED_USDT_GNO =
 // gno-side wrap deployment is finalized.
 const WRAPPED_SETH_GNO =
   import.meta.env.VITE_WRAPPED_SETH_GNO ||
-  'ibc/8ac2058b042ac196234c2bd7875e43aec867de4a'
+  'ibc/8304388bbc79cdbb7557b156bb36c6c8517f12d9'
 
 // gno-direct routes exercise the TokenOrderV2 (OP_TOKEN_ORDER) path. The
 // ESCROW route sends ugnot from gno and mints wrapped-ugnot on Sepolia; the
