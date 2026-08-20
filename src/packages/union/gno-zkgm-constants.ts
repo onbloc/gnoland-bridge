@@ -54,6 +54,14 @@ export const WRAPPED_UGNOT_SEPOLIA =
   (import.meta.env.VITE_WRAPPED_UGNOT_SEPOLIA as string | undefined) ||
   '0x0d5a3fff17e3532027a2c5c2b5236282eb360645'
 export const GNO_INIT_DEFAULT_QUOTE_TOKEN = WRAPPED_UGNOT_SEPOLIA
+
+// Superseded wrapped-ugnot deployments. The relayer's transfer history still
+// reports these for transfers made before the redeploy, so they're kept here
+// purely to resolve old activity to the GNOT symbol (see relayer-api.ts
+// resolveTokenDenom) instead of falling back to the raw address.
+export const WRAPPED_UGNOT_SEPOLIA_LEGACY_ADDRESSES = [
+  '0x12468e316cB7F3E23fCf096f39498BF8c2Ff7F0A',
+]
 export const GNO_INIT_RAW_OPERAND_HEX = ''
 
 // EVM-side ZKGM contract (Sepolia testnet) that terminates the gno<->EVM

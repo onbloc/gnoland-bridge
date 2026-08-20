@@ -1,5 +1,6 @@
 import { makeGnoscanTransactionUrl } from 'config/network'
 import routes from 'consts/routes'
+import { WRAPPED_UGNOT_SEPOLIA_LEGACY_ADDRESSES } from 'packages/union/gno-zkgm-constants'
 import { SUPPORTED_ASSETS } from 'types/asset'
 import { BlockChainType } from 'types/network'
 
@@ -146,8 +147,17 @@ const DENOM_TO_SYMBOL = new Map<string, string>(
   SUPPORTED_ASSETS.map((asset) => [asset.denom, asset.symbol])
 )
 
+const LEGACY_EVM_ADDRESS_TO_DENOM = new Map<string, string>(
+  WRAPPED_UGNOT_SEPOLIA_LEGACY_ADDRESSES.map((address) => [
+    address.toLowerCase(),
+    'ugnot',
+  ])
+)
+
 // Resolves a relayer-reported token (gno denom/pkgpath, or 0x EVM address)
 // to its AssetDenomEnum value via routes.ts's baseToken/quoteToken pairing.
+// Falls back to superseded contract addresses so historical transfers still
+// resolve to a symbol instead of the raw address.
 const resolveTokenDenom = (token: string): string | undefined => {
   if (DENOM_TO_SYMBOL.has(token)) return token
 
@@ -157,7 +167,7 @@ const resolveTokenDenom = (token: string): string | undefined => {
       r.baseToken.toLowerCase() === normalized ||
       r.quoteToken.toLowerCase() === normalized
   )
-  return route?.denom
+  return route?.denom ?? LEGACY_EVM_ADDRESS_TO_DENOM.get(normalized)
 }
 
 // Multi-symbol GRC20 factory tokens report as a grc20reg '<pkgPath>.<symbol>'
