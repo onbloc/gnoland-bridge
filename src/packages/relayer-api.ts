@@ -56,6 +56,14 @@ export interface RelayerSummary {
   total: number
 }
 
+export interface RelayerRecentSummary {
+  total: number
+  detected: number
+  processing: number
+  succeeded: number
+  failed: number
+}
+
 export interface RelayerListParams {
   orderby?: 'asc' | 'desc'
   limit?: number
@@ -124,6 +132,11 @@ export const fetchRelayerHistory = (
 
 export const fetchRelayerSummary = (): Promise<RelayerSummary> =>
   fetchJson<RelayerSummary>(buildUrl('/summary'))
+
+export const fetchRelayerRecentSummary = (
+  limit: number
+): Promise<RelayerRecentSummary> =>
+  fetchJson<RelayerRecentSummary>(buildUrl('/summary/recent', { limit }))
 
 export const fetchRelayerStatus = (
   packetHash: string

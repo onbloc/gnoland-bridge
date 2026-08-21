@@ -23,6 +23,9 @@ const Dashboard = (): ReactElement => {
     chartWindowSize,
     totalTransfers,
     successRate,
+    successRateSampleSize,
+    recentSummaryLoading,
+    recentSummaryError,
     processingCount,
     failedCount,
     currentPage,
@@ -31,7 +34,6 @@ const Dashboard = (): ReactElement => {
     resetPagination,
     hasNextPage,
     hasPrevPage,
-    transfersCount,
   } = useDashboard()
 
   const handleRouteChange = (v: typeof routeFilter): void => {
@@ -66,7 +68,7 @@ const Dashboard = (): ReactElement => {
         />
       </div>
 
-      {(transfersError || summaryError || chartError) && (
+      {(transfersError || summaryError || chartError || recentSummaryError) && (
         <div
           className="alert alert--error"
           style={{ marginBottom: 'var(--space-6)' }}
@@ -75,6 +77,7 @@ const Dashboard = (): ReactElement => {
             {transfersError?.message ??
               summaryError?.message ??
               chartError?.message ??
+              recentSummaryError?.message ??
               'Failed to load data'}
           </div>
         </div>
@@ -90,21 +93,21 @@ const Dashboard = (): ReactElement => {
         <StatsCard
           label="Success rate"
           value={successRate != null ? `${successRate}%` : null}
-          subtitle={`Loaded ${transfersCount} transfers`}
-          loading={transfersLoading}
+          subtitle={`Based on last ${successRateSampleSize} transfers`}
+          loading={recentSummaryLoading}
           brand
         />
         <StatsCard
           label="Processing"
           value={processingCount}
           subtitle="Transfers in progress"
-          loading={transfersLoading}
+          loading={recentSummaryLoading}
         />
         <StatsCard
           label="Failed"
           value={failedCount}
           subtitle="Transfers failed & returned"
-          loading={transfersLoading}
+          loading={recentSummaryLoading}
         />
       </div>
 
