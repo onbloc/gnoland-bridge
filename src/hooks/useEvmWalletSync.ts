@@ -21,11 +21,14 @@ const useEvmWalletSync = (): void => {
 
   useEffect(() => {
     if (isConnected && address && walletClient) {
-      loginEvm({
-        address,
-        walletClient,
-        walletType: connector?.name || 'Wallet',
-      })
+      loginEvm(
+        {
+          address,
+          walletClient,
+          walletType: connector?.name || 'Wallet',
+        },
+        chainId
+      )
     } else {
       disconnectEvm()
     }
