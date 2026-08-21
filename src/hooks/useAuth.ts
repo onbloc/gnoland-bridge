@@ -16,7 +16,7 @@ enum LocalStorageKey {
 
 const useAuth = (): {
   loginGno: (wallet: GnoWallet) => Promise<void>
-  loginEvm: (wallet: EvmWallet) => Promise<void>
+  loginEvm: (wallet: EvmWallet, chainId: number) => void
   disconnectGno: () => void
   disconnectEvm: () => void
   disconnectAll: () => void
@@ -52,8 +52,11 @@ const useAuth = (): {
     }
   }
 
-  const loginEvm = async (wallet: EvmWallet): Promise<void> => {
-    const chainId = await wallet.walletClient?.getChainId()
+  // chainId comes from wagmi's reactive useChainId() rather than an async
+  // wallet.walletClient.getChainId() call, so this stays synchronous - an
+  // account switch can no longer race with a stale in-flight call and leave
+  // evmWallet pointing at the previous account.
+  const loginEvm = (wallet: EvmWallet, chainId: number): void => {
     if (chainId) {
       setEvmNetwork({ chainId, name: 'Ethereum' })
       setEvmWallet(wallet)
