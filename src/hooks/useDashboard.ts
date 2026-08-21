@@ -3,6 +3,7 @@ import { useQuery } from 'react-query'
 
 import {
   fetchRelayerHistory,
+  fetchRelayerRecentSummary,
   fetchRelayerSummary,
   getRelayerRouteKey,
   getRelayerTransferAmountValue,
@@ -22,6 +23,10 @@ export interface ChartPoint {
 
 const PAGE_SIZE = 20
 const CHART_LIMIT = 100
+// Success rate / processing / failed stats come from the aggregate
+// /summary/recent endpoint so they reflect a much wider recent window than
+// the transfer table's current page.
+const RECENT_SUMMARY_LIMIT = 1000
 
 const formatDateKey = (timestamp: string): string =>
   timestamp ? timestamp.slice(0, 10) : 'Unknown'
@@ -105,6 +110,12 @@ export function useDashboard() {
     { staleTime: 30_000, refetchInterval: 30_000 }
   )
 
+  const recentSummaryQuery = useQuery(
+    ['dashboard-recent-summary'],
+    () => fetchRelayerRecentSummary(RECENT_SUMMARY_LIMIT),
+    { staleTime: 10_000, refetchInterval: 10_000 }
+  )
+
   const matchesFilters = useCallback(
     (transfer: RelayerTransfer): boolean => {
       const tokenMatches =
@@ -130,21 +141,20 @@ export function useDashboard() {
     [chartTransfers, matchesFilters]
   )
 
+  const recentSummary = recentSummaryQuery.data
+
   const successRate = useMemo(() => {
-    if (pageTransfers.length === 0) return null
-    const succeeded = pageTransfers.filter((t) => t.status === 2).length
-    return Math.round((succeeded / pageTransfers.length) * 100)
-  }, [pageTransfers])
+    if (!recentSummary || recentSummary.total === 0) return null
+    return Math.round((recentSummary.succeeded / recentSummary.total) * 100)
+  }, [recentSummary])
 
-  const processingCount = useMemo(
-    () => pageTransfers.filter((t) => t.status === 0 || t.status === 1).length,
-    [pageTransfers]
-  )
+  // "Processing" covers both sub-states the API reports for an in-flight
+  // transfer (detected on the source chain, then relaying/processing).
+  const processingCount = recentSummary
+    ? recentSummary.detected + recentSummary.processing
+    : 0
 
-  const failedCount = useMemo(
-    () => pageTransfers.filter((t) => t.status === 3).length,
-    [pageTransfers]
-  )
+  const failedCount = recentSummary?.failed ?? 0
 
   const chartData = useMemo<ChartPoint[]>(
     () => aggregateChartData(filteredChartTransfers),
@@ -177,6 +187,9 @@ export function useDashboard() {
     chartWindowSize: CHART_LIMIT,
     totalTransfers,
     successRate,
+    successRateSampleSize: recentSummary?.total ?? 0,
+    recentSummaryLoading: recentSummaryQuery.isLoading,
+    recentSummaryError: recentSummaryQuery.error as Error | null,
     processingCount,
     failedCount,
     currentPage,
@@ -187,6 +200,5 @@ export function useDashboard() {
       pageTransfers.length >= PAGE_SIZE &&
       (currentPage + 1) * PAGE_SIZE < totalTransfers,
     hasPrevPage: currentPage > 0,
-    transfersCount: pageTransfers.length,
   }
 }
