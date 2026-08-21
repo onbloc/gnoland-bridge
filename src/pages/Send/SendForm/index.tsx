@@ -15,7 +15,7 @@ import AuthStore from 'store/AuthStore'
 import SendStore from 'store/SendStore'
 
 import AssetList from './AssetList'
-import AutoFillButton from './AutoFillButton'
+import DestinationField from './DestinationField'
 import CopyTokenAddress from './CopyTokenAddress'
 
 // Bridge txs revert (and refund) once the on-chain amount exceeds 18 total
@@ -88,7 +88,7 @@ const SendForm = ({
   const isLoggedIn = useRecoilValue(AuthStore.isLoggedIn)
 
   const asset = useRecoilValue(SendStore.asset)
-  const [toAddress, setToAddress] = useRecoilState(SendStore.toAddress)
+  const toAddress = useRecoilValue(SendStore.toAddress)
   const [amount, setAmount] = useRecoilState(SendStore.amount)
   const toBlockChain = useRecoilValue(SendStore.toBlockChain)
   const fromBlockChain = useRecoilValue(SendStore.fromBlockChain)
@@ -101,10 +101,6 @@ const SendForm = ({
 
   const { formatBalance, getAssetList, getDecimals } = useAsset()
   const { validateSendData } = useSendValidate()
-
-  const onChangeToAddress = ({ value }: { value: string }): void => {
-    setToAddress(value)
-  }
 
   const onChangeAmount = ({ value }: { value: string }): void => {
     if (!value || value.length === 0) {
@@ -209,17 +205,8 @@ const SendForm = ({
       <div className="field">
         <label className="field__label">
           <span>Destination</span>
-          <AutoFillButton />
         </label>
-        <input
-          className="input input--mono"
-          type="text"
-          placeholder="Recipient address"
-          value={toAddress}
-          onChange={({ target: { value } }): void =>
-            onChangeToAddress({ value })
-          }
-        />
+        <DestinationField />
         <FormErrorMessage
           errorMessage={validationResult.errorMessage?.toAddress}
         />

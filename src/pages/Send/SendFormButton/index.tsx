@@ -2,12 +2,10 @@ import { ReactElement } from 'react'
 import { useRecoilValue } from 'recoil'
 
 import { ValidateItemResultType } from 'types/send'
-import { isGnoChain } from 'types/network'
 
 import Button from 'components/Button'
 
 import AuthStore from 'store/AuthStore'
-import SendStore from 'store/SendStore'
 import SendProcessStore, { ProcessStatus } from 'store/SendProcessStore'
 
 import SubmitButton from './SubmitButton'
@@ -18,11 +16,12 @@ const SendFormButton = ({
 }: {
   feeValidationResult: ValidateItemResultType
 }): ReactElement => {
-  const isLoggedIn = useRecoilValue(AuthStore.isLoggedIn)
-  const fromBlockChain = useRecoilValue(SendStore.fromBlockChain)
+  const gnoWallet = useRecoilValue(AuthStore.gnoWallet)
+  const evmWallet = useRecoilValue(AuthStore.evmWallet)
+  const isFullyConnected = useRecoilValue(AuthStore.isFullyConnected)
   const status = useRecoilValue(SendProcessStore.sendProcessStatus)
 
-  if (isLoggedIn) {
+  if (isFullyConnected) {
     return status === ProcessStatus.Input ? (
       <NextOrApproveButton feeValidationResult={feeValidationResult} />
     ) : (
@@ -30,9 +29,13 @@ const SendFormButton = ({
     )
   }
 
-  const walletName = isGnoChain(fromBlockChain) ? 'Adena' : 'an EVM'
+  const label = !gnoWallet && !evmWallet
+    ? 'Connect Adena and EVM wallets to continue'
+    : !gnoWallet
+      ? 'Connect Adena wallet to continue'
+      : 'Connect an EVM wallet to continue'
 
-  return <Button disabled>Connect {walletName} wallet to continue</Button>
+  return <Button disabled>{label}</Button>
 }
 
 export default SendFormButton
