@@ -54,13 +54,19 @@ export default function DestinationField(): ReactElement {
     )
   }
 
+  const placeholder = isGnoChain(toBlockChain)
+    ? 'Your Gno.land address'
+    : isEvmChain(toBlockChain)
+      ? 'Your EVM address'
+      : ''
+
   if (!isSupportedBrowser) {
     return (
       <input
         className="input input--mono"
         type="text"
         value=""
-        placeholder="Connect a wallet to set the destination"
+        placeholder={placeholder}
         readOnly
       />
     )
@@ -74,7 +80,7 @@ export default function DestinationField(): ReactElement {
         style={connectBtnStyle}
         onClick={(): void => setOpen(true)}
       >
-        Connect wallet to set destination
+        {placeholder}
       </button>
     )
   }
@@ -115,7 +121,7 @@ export default function DestinationField(): ReactElement {
           }
         }}
       >
-        Connect wallet to set destination
+        {placeholder}
       </button>
     )
   }
