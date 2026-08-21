@@ -22,7 +22,7 @@ export interface ChartPoint {
 }
 
 const PAGE_SIZE = 20
-const CHART_LIMIT = 100
+const CHART_LIMIT = 1000
 // Success rate / processing / failed stats come from the aggregate
 // /summary/recent endpoint so they reflect a much wider recent window than
 // the transfer table's current page.
